@@ -256,17 +256,46 @@ function doSkip(){skipped=true;hideC();$('input-row').style.display='none';const
 function showRes(res){const w=document.createElement('div');w.className='res-cards';res.forEach(r=>{const a=document.createElement('a');a.className='res-card';a.href=r.url;a.target='_blank';a.rel='noopener';a.innerHTML='<div class="ri"><i class="'+r.icon+'"></i></div><div class="rb"><div class="rl">'+r.label+'</div><div class="rt">'+r.title+'</div><div class="rd">'+r.desc+'</div></div><div class="ra"><i class="fa-solid fa-arrow-up-right-from-square"></i></div>';w.appendChild(a);});$('chat-msgs').appendChild(w);w.scrollIntoView({block:'end',behavior:'smooth'});}
 
 async function finish(){
-  hideC();$('text-in').disabled=true;$('text-in').placeholder='All done!';$('send-btn').disabled=true;
+  hideC();$('input-row').style.display='none';const skip=$('skip-link');if(skip)skip.style.display='none';
   showT();await wait(1000);hideT();
   if(skipped){
     addMsg('bot','No problem at all. The team looks forward to meeting you.');
   } else {
+    // Submit answers to DynamoDB
+    await submitAnswers();
     addMsg('bot',"Got it. Here are a few resources tailored to your priorities — take a look before the meeting:");
     await wait(400);
     const res=getRes();
     if(res.length) showRes(res);
     await wait(600);
     addMsg('bot',"You're all set. We'll be well prepared for our conversation. See you soon.");
+  }
+}
+
+// ═══ SUBMIT TO BACKEND ═══
+async function submitAnswers(){
+  try {
+    const convId = crypto.randomUUID();
+    const payload = {
+      conversationId: convId,
+      answers: {
+        topic: answers.intent || '',
+        desired_outcome: answers.focus || '',
+        timeline: answers.onaws || '',
+        preparation: answers.context || '',
+        attendees: answers.attendees || '',
+        additional_notes: Object.values(answers).filter(v => typeof v === 'string').join(' | ')
+      }
+    };
+    const res = await fetch("https://yb0irqcgy2.execute-api.us-east-1.amazonaws.com/submit", {
+      method: "POST",
+      headers: {"Content-Type":"application/json"},
+      body: JSON.stringify(payload)
+    });
+    const data = await res.json();
+    if(data.briefId) console.log('Brief saved:', data.briefId);
+  } catch(e) {
+    console.error('Submit failed:', e);
   }
 }
 
