@@ -205,7 +205,7 @@ async function askBedrock(userMessage) {
     });
     if (!response.ok) return null;
     const data = await response.json();
-    return data.reply || null;
+    return data; // { reply: "...", relevant: true/false }
   } catch (e) {
     return null; // fallback to static ack
   }
@@ -220,10 +220,22 @@ async function doSub(q,v){
 
   if (isCustomText && current > 0) {
     showT();
-    const aiAck = await askBedrock(v);
+    const aiResult = await askBedrock(v);
     hideT();
-    if (aiAck) {
-      answers._lastAiAck = aiAck;
+    if (aiResult) {
+      if (aiResult.relevant === false) {
+        // Off-topic: show the message but don't advance — let them try again
+        addMsg('bot', aiResult.reply);
+        // Re-show the choices for the current question
+        const qs = activeQs();
+        const q2 = qs[current-1]; // we already incremented, go back
+        current--;
+        setProg(current, activeQs().length);
+        await wait(300);
+        renderC(q2, q2.type === 'multi');
+        return;
+      }
+      answers._lastAiAck = aiResult.reply;
     }
   }
 
