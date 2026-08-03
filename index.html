@@ -148,7 +148,10 @@ async function ask(idx){
 
   // Determine ack based on PREVIOUS question
   let ack = '';
-  if(idx > 0){
+  if (answers._lastAiAck) {
+    ack = answers._lastAiAck;
+    delete answers._lastAiAck;
+  } else if(idx > 0){
     const prevQ = qs[idx-1];
     if(prevQ.id==='welcome') ack = ACKS_AFTER.welcome;
     else if(prevQ.id==='intent') ack = INTENT_ACKS[answers.intent] || "Thanks for sharing that.";
@@ -189,8 +192,41 @@ function hC(q,o,b,m){
   } else{if(b.classList.contains('sel')){b.classList.remove('sel');multiSel=multiSel.filter(s=>s!==o);}else{if(q.max&&multiSel.length>=q.max){const old=multiSel.shift();$('choices').querySelectorAll('.ch-btn').forEach(x=>{if(x.textContent===old)x.classList.remove('sel');});}b.classList.add('sel');multiSel.push(o);}}
 }
 
+// ═══ BEDROCK INTEGRATION (via API Gateway + Lambda — key is NOT in frontend) ═══
+// Replace this URL with your API Gateway endpoint after deployment
+const API_URL = "https://df35lxjaah.execute-api.us-east-1.amazonaws.com/chat";
+
+async function askBedrock(userMessage) {
+  try {
+    const response = await fetch(API_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ message: userMessage })
+    });
+    if (!response.ok) return null;
+    const data = await response.json();
+    return data.reply || null;
+  } catch (e) {
+    return null; // fallback to static ack
+  }
+}
+
 async function doSub(q,v){
   hideC();answers[q.key]=v;addMsg('user',v);
+
+  // If user typed free text (not a predefined option), get a smart ack from Claude
+  const predefined = typeof q.opts === 'function' ? q.opts(answers) : (q.opts || []);
+  const isCustomText = !predefined.includes(v) && v !== 'Other';
+
+  if (isCustomText && current > 0) {
+    showT();
+    const aiAck = await askBedrock(v);
+    hideT();
+    if (aiAck) {
+      answers._lastAiAck = aiAck;
+    }
+  }
+
   current++;setProg(current,activeQs().length);
   ask(current);
 }
