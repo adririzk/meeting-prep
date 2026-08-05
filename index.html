@@ -300,9 +300,12 @@ function selectOption(btn, value, multiMax) {
         if (session.awaitingRetry) {
             session.awaitingRetry = false;
             if (value === "continue") {
-                // Re-show the current question with its original options
-                reShowCurrentQuestion();
+                // Use the stored free-text answer and advance to next question
+                var pendingAnswer = session.pendingFreeTextAnswer || "other";
+                session.pendingFreeTextAnswer = null;
+                processAnswer(pendingAnswer, true);
             } else if (value === "skip") {
+                session.pendingFreeTextAnswer = null;
                 processAnswer("skip", false);
             }
             return;
@@ -365,33 +368,15 @@ async function sendMessage() {
             await addBotAck(aiResult.reply, 300);
         }
         
-        // If not relevant OR if the AI reply suggests coming back/skipping, don't advance
-        var replyLower = (aiResult.reply || "").toLowerCase();
-        var isRedirect = !aiResult.relevant || 
-            replyLower.indexOf("skip") >= 0 || 
-            replyLower.indexOf("come back") >= 0 || 
-            replyLower.indexOf("take the time") >= 0 ||
-            replyLower.indexOf("reschedule") >= 0 ||
-            replyLower.indexOf("whenever you") >= 0 ||
-            replyLower.indexOf("no pressure") >= 0 ||
-            replyLower.indexOf("what specifically") >= 0 ||
-            replyLower.indexOf("what would need to change") >= 0 ||
-            replyLower.indexOf("tell me more") >= 0 ||
-            replyLower.indexOf("can you elaborate") >= 0;
-        
-        // If not relevant, don't advance - show continue/skip options
-        if (isRedirect) {
-            await addBotAck("Would you like to continue with the next question, or skip this one?", 300);
-            showOptions([
-                { label: "Continue", value: "continue" },
-                { label: "Skip this question", value: "skip" }
-            ], null, 1);
-            session.awaitingRetry = true;
-            return;
-        }
-        
-        // Use extracted value if available to map to structured answer
-        processAnswer(aiResult.extracted || text, true);
+        // Always show Continue/Skip after a free-text answer
+        // Store the answer for later use when they click Continue
+        session.pendingFreeTextAnswer = aiResult.extracted || text;
+        showOptions([
+            { label: "Continue", value: "continue" },
+            { label: "Skip this question", value: "skip" }
+        ], null, 1);
+        session.awaitingRetry = true;
+        return;
     } else {
         processAnswer(text, true);
     }
