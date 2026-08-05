@@ -350,8 +350,18 @@ async function sendMessage() {
             await addBotAck(aiResult.reply, 300);
         }
         
+        // If not relevant OR if the AI reply suggests coming back/skipping, don't advance
+        var replyLower = (aiResult.reply || "").toLowerCase();
+        var isRedirect = !aiResult.relevant || 
+            replyLower.indexOf("skip") >= 0 || 
+            replyLower.indexOf("come back") >= 0 || 
+            replyLower.indexOf("take the time") >= 0 ||
+            replyLower.indexOf("reschedule") >= 0 ||
+            replyLower.indexOf("whenever you") >= 0 ||
+            replyLower.indexOf("no pressure") >= 0;
+        
         // If not relevant, don't advance - show continue/skip options
-        if (!aiResult.relevant) {
+        if (isRedirect) {
             showOptions([
                 { label: "Continue", value: "continue" },
                 { label: "Skip this question", value: "skip" }
