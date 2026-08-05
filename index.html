@@ -1,0 +1,1189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AWS Ready</title>
+    <link href="https://fonts.cdnfonts.com/css/amazon-ember" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Amazon Ember', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #ffffff;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        .top-bar {
+            background: #000000;
+            padding: 10px 24px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .aws-logo { flex-shrink: 0; }
+        .top-bar-title {
+            color: #ffffff;
+            font-size: 14px;
+            font-weight: 500;
+        }
+        .main-content {
+            flex: 1;
+            max-width: 680px;
+            width: 100%;
+            margin: 0 auto;
+            padding: 28px 20px 20px;
+            display: flex;
+            flex-direction: column;
+        }
+        .hero {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .hero-icon {
+            width: 52px; height: 52px; background: #232f3e; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center; margin: 0 auto 10px;
+        }
+        .hero-icon span { color: white; font-size: 11px; font-weight: 700; font-family: 'Amazon Ember', sans-serif; }
+        .hero h1 { font-size: 20px; font-weight: 700; color: #16191f; margin-bottom: 2px; }
+        .hero p { font-size: 14px; color: #687078; }
+        .chat-area {
+            flex: 1; display: flex; flex-direction: column; gap: 14px;
+            overflow-y: auto; padding-bottom: 16px;
+        }
+        .section-label { font-size: 12px; color: #aab7b8; margin-bottom: 2px; }
+        .message-row { display: flex; align-items: flex-start; gap: 10px; animation: fadeIn 0.3s ease; }
+        .message-row.user { justify-content: flex-end; }
+        .avatar {
+            width: 30px; height: 30px; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            flex-shrink: 0; font-size: 9px; font-weight: 700; color: white;
+        }
+        .avatar.bot { background: #232f3e; }        .avatar.user { background: #0073bb; }
+        .bubble { max-width: 72%; padding: 12px 16px; border-radius: 10px; font-size: 14px; line-height: 1.55; }
+        .message-row.bot .bubble { background: #eaeded; color: #16191f; border-bottom-left-radius: 2px; }
+        .message-row.user .bubble { background: #000000; color: white; border-bottom-right-radius: 2px; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+        .typing-dots { display: flex; gap: 4px; padding: 4px 0; }
+        .typing-dots .dot { width: 6px; height: 6px; background: #aab7b8; border-radius: 50%; animation: bounce 1.2s infinite; }
+        .typing-dots .dot:nth-child(2) { animation-delay: 0.2s; }
+        .typing-dots .dot:nth-child(3) { animation-delay: 0.4s; }
+        @keyframes bounce { 0%,60%,100%{transform:translateY(0)} 30%{transform:translateY(-4px)} }
+        #options-area { animation: fadeIn 0.3s ease; }
+        .options-instruction { font-size: 12px; color: #687078; margin-bottom: 10px; }
+        .options-grid { display: flex; flex-wrap: wrap; gap: 8px; }
+        .option-pill {
+            padding: 9px 16px; border: 1.5px solid #d5dbdb; border-radius: 20px;
+            background: white; font-size: 13px; font-family: 'Amazon Ember', sans-serif;
+            color: #16191f; cursor: pointer; transition: all 0.15s;
+        }
+        .option-pill:hover { border-color: #0073bb; background: #f1f8ff; }
+        .option-pill.selected { border-color: #0073bb; background: #f1f8ff; color: #0073bb; font-weight: 500; }
+        .continue-btn {
+            margin-top: 12px; padding: 10px 24px; background: #232f3e; color: white;
+            border: none; border-radius: 6px; font-size: 13px; font-weight: 600;
+            font-family: 'Amazon Ember', sans-serif; cursor: pointer; display: none;
+        }
+        .continue-btn.visible { display: inline-block; }
+        .continue-btn:hover { background: #1a2332; }
+        .cta-primary {
+            padding: 12px 32px; background: #232f3e; color: white; border: none;
+            border-radius: 8px; font-size: 15px; font-weight: 600;
+            font-family: 'Amazon Ember', sans-serif; cursor: pointer;
+        }
+        .cta-primary:hover { background: #1a2332; }
+        .input-area {
+            display: flex; gap: 8px; align-items: flex-end;
+            margin-top: 14px; padding-top: 14px; border-top: 1px solid #eaeded;
+        }
+        #user-input {
+            flex: 1; padding: 10px 16px; border: 1.5px solid #d5dbdb; border-radius: 22px;
+            font-size: 14px; font-family: 'Amazon Ember', sans-serif; resize: none; outline: none; max-height: 60px;
+        }
+        #user-input:focus { border-color: #0073bb; }
+        .send-btn {
+            width: 36px; height: 36px; background: #232f3e; border: none; border-radius: 50%;
+            cursor: pointer; display: flex; align-items: center; justify-content: center;
+        }
+        .send-btn:hover { background: #1a2332; }
+        .skip-link {
+            display: block; text-align: center; margin-top: 8px; font-size: 11px;
+            color: #aab7b8; cursor: pointer; border: none; background: none;
+            font-family: 'Amazon Ember', sans-serif;
+        }
+        .skip-link:hover { color: #687078; text-decoration: underline; }
+        .resource-card {
+            background: #f1faff; border: 1px solid #b8e0f7; border-radius: 8px;
+            padding: 10px 14px; font-size: 13px; color: #0073bb; max-width: 72%;
+            display: flex; align-items: center; gap: 8px;
+        }
+        .chat-area::-webkit-scrollbar { width: 4px; }
+        .chat-area::-webkit-scrollbar-thumb { background: #d5dbdb; border-radius: 4px; }
+    </style>
+</head>
+<body>
+    <div class="top-bar">
+        <svg class="aws-logo" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 60" width="60" height="36"><path fill="#ffffff" d="M27.4 27.7c0 1.1.1 2 .4 2.6.2.6.6 1.3.9 2 .2.3.2.5.2.6 0 .3-.2.5-.5.8l-1.5 1c-.2.2-.4.2-.6.2-.3 0-.5-.1-.7-.4-.3-.4-.6-.8-.9-1.2-.3-.5-.5-1-.8-1.6-1.9 2.2-4.2 3.3-7 3.3-2 0-3.6-.6-4.8-1.7-1.2-1.2-1.9-2.7-1.9-4.6 0-2 .7-3.7 2.2-4.9 1.5-1.2 3.4-1.8 5.9-1.8.8 0 1.7.1 2.6.2.9.1 1.8.3 2.8.6v-1.7c0-1.8-.4-3.1-1.1-3.8-.7-.8-2-1.1-3.9-1.1-.8 0-1.7.1-2.6.3-.9.2-1.8.5-2.7.9-.4.2-.7.3-.9.3-.1.1-.3.1-.4.1-.3 0-.5-.2-.5-.7v-1.1c0-.4.1-.6.2-.8.1-.2.3-.3.6-.5.8-.4 1.8-.8 3-1.1 1.2-.3 2.5-.5 3.8-.5 2.9 0 5 .7 6.4 2 1.3 1.3 2 3.3 2 6.1v8zM16 30.4c.8 0 1.6-.1 2.5-.4.9-.3 1.6-.9 2.2-1.6.4-.5.6-1 .7-1.6.1-.6.2-1.3.2-2.1v-1c-.7-.2-1.5-.4-2.3-.5-.8-.1-1.6-.2-2.4-.2-1.6 0-2.8.3-3.6 1-.8.7-1.2 1.6-1.2 2.8 0 1.1.3 2 .9 2.5.6.7 1.5 1.1 3 1.1zm20.4 2.8c-.4 0-.6-.1-.8-.3-.2-.2-.3-.5-.4-.9L30.4 17c-.1-.4-.2-.7-.2-.9 0-.3.2-.5.5-.5h2.3c.4 0 .6.1.8.3.2.2.3.5.4.9l3.6 14.1 3.3-14.1c.1-.4.2-.7.4-.9.2-.2.5-.3.8-.3h1.9c.4 0 .6.1.8.3.2.2.3.5.4.9l3.4 14.3 3.7-14.3c.1-.4.3-.7.4-.9.2-.2.5-.3.8-.3h2.2c.3 0 .5.2.5.5 0 .1 0 .2-.1.4 0 .1-.1.3-.2.5l-5.1 14.9c-.1.4-.3.7-.4.9-.2.2-.5.3-.8.3h-2c-.4 0-.6-.1-.8-.3-.2-.2-.3-.5-.4-.9L43 18.5l-3.2 13.9c-.1.4-.2.7-.4.9-.2.2-.5.3-.8.3h-2.2zm32.8.7c-1.2 0-2.4-.1-3.5-.4-1.1-.3-2-.7-2.6-1.1-.4-.3-.6-.5-.7-.8-.1-.2-.2-.5-.2-.7v-1.2c0-.5.2-.7.5-.7.1 0 .3 0 .4.1.1.1.3.2.6.3.8.4 1.7.7 2.7.9 1 .2 1.9.3 2.9.3 1.5 0 2.7-.3 3.5-.8.8-.5 1.2-1.2 1.2-2.1 0-.6-.2-1.1-.6-1.5-.4-.4-1.2-.8-2.2-1.1l-3.2-1c-1.6-.5-2.7-1.2-3.5-2.1-.8-.9-1.2-1.9-1.2-3.1 0-.9.2-1.7.6-2.4.4-.7.9-1.3 1.6-1.8.7-.5 1.5-.9 2.4-1.1.9-.3 1.9-.4 2.9-.4.5 0 1 0 1.6.1.5.1 1 .2 1.5.3.5.1.9.3 1.3.4.4.2.7.3.9.5.3.2.5.4.6.6.1.2.2.5.2.8v1.1c0 .5-.2.7-.5.7-.2 0-.4-.1-.7-.3-1.2-.6-2.6-.9-4.3-.9-1.4 0-2.4.2-3.2.7-.8.5-1.1 1.2-1.1 2.1 0 .6.2 1.2.7 1.6.4.4 1.2.8 2.3 1.2l3.1 1c1.5.5 2.7 1.2 3.4 2.1.7.9 1.1 1.9 1.1 3 0 .9-.2 1.8-.6 2.5-.4.7-.9 1.4-1.7 1.9-.7.5-1.6.9-2.6 1.2-1.1.3-2.2.5-3.4.5z"/><path fill="#ffffff" d="M66.4 42.5c-7.2 4.3-17.5 6.6-26.4 6.6-12.5 0-23.7-3.7-32.2-9.9-.7-.5-.1-1.2.7-.8 9.2 4.3 20.5 6.9 32.2 6.9 7.9 0 16.6-1.3 24.6-4 1.2-.4 2.2.7 1.1 1.2zm3.5-3.2c-.9-.9-5.9-.5-8.2-.2-.7.1-.8-.4-.2-.8 4-2.2 10.5-1.6 11.3-.8.7.7-.2 6.2-4 8.7-.6.4-1.1.2-.9-.3.8-1.8 2.8-5.6 2-6.6z"/></svg>
+        <span class="top-bar-title">AWS Ready</span>
+    </div>
+    <div class="main-content">
+        <div class="hero">
+            <div class="hero-icon"><span>aws</span></div>
+            <h1>AWS Ready</h1>
+            <p>Get the most out of your meeting</p>
+        </div>
+        <div class="chat-area" id="chat-area">
+            <p class="section-label">Ready to start</p>
+        </div>
+        <div id="options-area" style="display:none;"></div>
+        <div class="input-area" id="input-area" style="display:none;">
+            <textarea id="user-input" placeholder="Type your answer..." rows="1"
+                onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendMessage();}"></textarea>
+            <button class="send-btn" onclick="sendMessage()">&#10148;</button>
+        </div>
+        <button class="skip-link" id="skip-link" onclick="skipQuestion()" style="display:none;">Skip this question</button>
+        <button class="skip-link" id="welcome-skip" onclick="welcomeSkip()" style="display:none;">Skip, see you at the meeting</button>
+    </div>
+
+<script>
+var chatArea = document.getElementById("chat-area");
+var optionsArea = document.getElementById("options-area");
+var session = { step: null, answers: {}, multiSelect: [], path: null, awaitingRetry: false };
+
+// ═══ BEDROCK INTEGRATION ═══
+var API_URL = "https://yb0irqcgy2.execute-api.us-east-1.amazonaws.com/chat";
+var conversationHistory = []; // Track full conversation for Bedrock context
+var currentQuestionText = ""; // The current question being shown
+var currentOptions = []; // The current available options
+
+// Track what bot said and what user answered for context
+function trackBotMessage(text) {
+    conversationHistory.push({ role: "bot", text: text });
+}
+function trackUserMessage(text) {
+    conversationHistory.push({ role: "user", text: text });
+}
+
+// Call Bedrock with conversation context
+async function callBedrock(userText) {
+    try {
+        var response = await fetch(API_URL, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                message: userText,
+                history: conversationHistory.slice(-20), // Last 20 messages for context
+                currentQuestion: currentQuestionText,
+                availableOptions: currentOptions
+            })
+        });
+        if (!response.ok) throw new Error("API error");
+        var data = await response.json();
+        return data;
+    } catch (err) {
+        console.error("Bedrock API error:", err);
+        return { reply: "", relevant: true, extracted: "" };
+    }
+}
+
+window.onload = function() { setTimeout(beginChat, 400); };
+
+function scrollDown() { setTimeout(function() { window.scrollTo(0, document.body.scrollHeight); }, 60); }
+
+function addBot(text, delay) {
+    if (!delay) delay = 500;
+    trackBotMessage(text.replace(/<[^>]*>/g, '')); // Track plain text version
+    return new Promise(function(resolve) {
+        var row = document.createElement("div");
+        row.className = "message-row bot";
+        row.innerHTML = '<div class="avatar bot">aws</div><div class="bubble"><div class="typing-dots"><span class="dot"></span><span class="dot"></span><span class="dot"></span></div></div>';
+        chatArea.appendChild(row);
+        scrollDown();
+        setTimeout(function() {
+            row.querySelector(".bubble").innerHTML = text;
+            scrollDown();
+            resolve();
+        }, delay);
+    });
+}
+
+// Show AI-generated acknowledgement (not tracked as a question)
+function addBotAck(text, delay) {
+    if (!delay) delay = 400;
+    return new Promise(function(resolve) {
+        var row = document.createElement("div");
+        row.className = "message-row bot";
+        row.innerHTML = '<div class="avatar bot">aws</div><div class="bubble"><div class="typing-dots"><span class="dot"></span><span class="dot"></span><span class="dot"></span></div></div>';
+        chatArea.appendChild(row);
+        scrollDown();
+        setTimeout(function() {
+            row.querySelector(".bubble").innerHTML = text;
+            scrollDown();
+            resolve();
+        }, delay);
+    });
+}
+
+function addUser(text) {
+    var row = document.createElement("div");
+    row.className = "message-row user";
+    row.innerHTML = '<div class="bubble">' + text + '</div><div class="avatar user">&#9679;</div>';
+    chatArea.appendChild(row);
+    scrollDown();
+}
+
+function addResource(icon, text, url) {
+    var row = document.createElement("div");
+    row.className = "message-row bot";
+    if (url) {
+        row.innerHTML = '<div class="avatar bot">aws</div><a href="' + url + '" target="_blank" rel="noopener" class="resource-card" style="text-decoration:none;cursor:pointer;">' + icon + ' ' + text + '</a>';
+    } else {
+        row.innerHTML = '<div class="avatar bot">aws</div><div class="resource-card">' + icon + ' ' + text + '</div>';
+    }
+    chatArea.appendChild(row);
+    scrollDown();
+}
+
+function showWelcomeCTA() {
+    var el = document.createElement("div");
+    el.id = "welcome-cta-inline";
+    el.style.textAlign = "center";
+    el.style.padding = "12px 0";
+    el.innerHTML = '<button class="cta-primary" onclick="welcomeStart()">Sure, let\'s do it</button>';
+    chatArea.appendChild(el);
+    document.getElementById("welcome-skip").style.display = "block";
+    scrollDown();
+}
+
+function hideWelcomeCTA() {
+    document.getElementById("welcome-skip").style.display = "none";
+    var inline = document.getElementById("welcome-cta-inline");
+    if (inline) inline.remove();
+}
+
+function showOptions(options, instruction, multiMax) {
+    optionsArea.style.display = "block";
+    session.multiSelect = [];
+    // Track current options for Bedrock context
+    currentOptions = options.map(function(o) { return o.label; });
+    var html = instruction ? '<p class="options-instruction">' + instruction + '</p>' : '';
+    html += '<div class="options-grid">';
+    for (var i = 0; i < options.length; i++) {
+        html += '<button class="option-pill" data-value="' + options[i].value + '" onclick="selectOption(this,\'' + options[i].value + '\',' + (multiMax||0) + ')">' + options[i].label + '</button>';
+    }
+    html += '</div>';
+    if (multiMax && multiMax > 1) {
+        html += '<button class="continue-btn" id="continue-btn" onclick="submitMulti()">Continue</button>';
+    }
+    optionsArea.innerHTML = html;
+    scrollDown();
+}
+
+function hideOptions() { optionsArea.style.display = "none"; optionsArea.innerHTML = ""; currentOptions = []; }
+
+function selectOption(btn, value, multiMax) {
+    if (!multiMax || multiMax <= 1) {
+        // If "other" or "something else" is clicked, show text input
+        if (value === "other") {
+            hideOptions();
+            document.getElementById("input-area").style.display = "flex";
+            document.getElementById("user-input").placeholder = "Tell us more...";
+            document.getElementById("user-input").focus();
+            return;
+        }
+        
+        hideOptions();
+        addUser(btn.textContent);
+        trackUserMessage(btn.textContent);
+        
+        // Handle off-topic recovery options
+        if (session.awaitingRetry) {
+            session.awaitingRetry = false;
+            if (value === "continue") {
+                // Use the stored free-text answer and advance to next question
+                var pendingAnswer = session.pendingFreeTextAnswer || "other";
+                session.pendingFreeTextAnswer = null;
+                processAnswer(pendingAnswer, true);
+            } else if (value === "skip") {
+                session.pendingFreeTextAnswer = null;
+                processAnswer("skip", false);
+            }
+            return;
+        }
+        
+        processAnswer(value, false);
+    } else {
+        if (btn.classList.contains("selected")) {
+            btn.classList.remove("selected");
+            session.multiSelect = session.multiSelect.filter(function(v) { return v !== value; });
+        } else if (session.multiSelect.length < multiMax) {
+            btn.classList.add("selected");
+            session.multiSelect.push(value);
+        }
+        var cont = document.getElementById("continue-btn");
+        if (session.multiSelect.length > 0) cont.classList.add("visible");
+        else cont.classList.remove("visible");
+    }
+}
+
+function submitMulti() {
+    var labels = [];
+    document.querySelectorAll(".option-pill.selected").forEach(function(b) { labels.push(b.textContent); });
+    hideOptions();
+    addUser(labels.join(", "));
+    trackUserMessage(labels.join(", "));
+    processAnswer(session.multiSelect, false);
+}
+
+async function sendMessage() {
+    var input = document.getElementById("user-input");
+    var text = input.value.trim();
+    if (!text) return;
+    input.value = "";
+    hideOptions();
+    hideWelcomeCTA();
+    // Hide the input area after they submit their typed answer
+    document.getElementById("input-area").style.display = "none";
+    addUser(text);
+    trackUserMessage(text);
+    
+    // For free-text input, call Bedrock for contextual acknowledgement
+    if (session.step && session.step !== "welcome") {
+        // Show typing indicator
+        var typingRow = document.createElement("div");
+        typingRow.className = "message-row bot";
+        typingRow.id = "bedrock-typing";
+        typingRow.innerHTML = '<div class="avatar bot">aws</div><div class="bubble"><div class="typing-dots"><span class="dot"></span><span class="dot"></span><span class="dot"></span></div></div>';
+        chatArea.appendChild(typingRow);
+        scrollDown();
+        
+        // Call Bedrock with context
+        var aiResult = await callBedrock(text);
+        
+        // Remove typing indicator
+        var typing = document.getElementById("bedrock-typing");
+        if (typing) typing.remove();
+        
+        if (aiResult.reply) {
+            await addBotAck(aiResult.reply, 300);
+        }
+        
+        // Always show Continue/Skip after a free-text answer
+        // Store the answer for later use when they click Continue
+        session.pendingFreeTextAnswer = aiResult.extracted || text;
+        showOptions([
+            { label: "Continue", value: "continue" },
+            { label: "Skip this question", value: "skip" }
+        ], null, 1);
+        session.awaitingRetry = true;
+        return;
+    } else {
+        processAnswer(text, true);
+    }
+}
+
+function reShowCurrentQuestion() {
+    var s = session.step;
+    if (s === "q1") askQ1();
+    else if (s === "q2") askQ2();
+    else if (s === "q3") askQ3();
+    else if (s === "q4") askQ4();
+    else if (s === "q5") askQ5();
+}
+
+function skipQuestion() { hideOptions(); hideWelcomeCTA(); trackUserMessage("skip"); processAnswer("skip", false); }
+function welcomeStart() { hideWelcomeCTA(); addUser("Sure, let's do it"); trackUserMessage("Sure, let's do it"); processAnswer("start", false); }
+function welcomeSkip() { hideWelcomeCTA(); addUser("Skip, see you at the meeting"); trackUserMessage("Skip, see you at the meeting"); processAnswer("skip", false); }
+</script>
+
+<script>
+// CONVERSATION FLOW
+
+async function beginChat() {
+    await addBot("Hi! Your meeting is confirmed.");
+    await addBot("Want to jump straight into what matters to you? Share a few quick details and your AWS team will come fully prepared to discuss your priorities from minute one.", 700);
+    session.step = "welcome";
+    currentQuestionText = "Would you like to share a few quick details so your AWS team comes prepared?";
+    showWelcomeCTA();
+}
+
+async function processAnswer(value, fromFreeText) {
+    var s = session.step;
+    if (s === "welcome") {
+        if (value === "skip" || (typeof value === "string" && value.toLowerCase().indexOf("skip") >= 0)) {
+            await addBot("No problem! The team looks forward to meeting you. See you soon.");
+            endChat();
+            return;
+        }
+        await askQ1();
+    } else if (s === "q1") {
+        session.answers.q1 = value;
+        if (Array.isArray(value)) {
+            session.path = (value.indexOf("none") >= 0 || value.indexOf("not-sure") >= 0) ? "greenfield" : "engaged";
+        } else {
+            var l = (typeof value === "string") ? value.toLowerCase() : "";
+            // For free-text, try to infer path from extracted content
+            if (l.indexOf("not using") >= 0 || l.indexOf("not sure") >= 0 || l.indexOf("none") >= 0 || l === "not-sure" || l.indexOf("haven't started") >= 0 || l.indexOf("don't use") >= 0) {
+                session.path = "greenfield";
+            } else if (l.length > 0 && l !== "skip") {
+                session.path = "engaged"; // If they mentioned specific services, they're engaged
+            } else {
+                session.path = "greenfield";
+            }
+        }
+        await askQ2();
+    } else if (s === "q2") {
+        session.answers.q2 = (typeof value === "string") ? mapFreeTextToQ2(value) : value[0];
+        await askQ3();
+    } else if (s === "q3") {
+        session.answers.q3 = value;
+        await askQ4();
+    } else if (s === "q4") {
+        session.answers.q4 = value;
+        await askQ5();
+    } else if (s === "q5") {
+        session.answers.q5 = value;
+        await finish();
+    }
+}
+
+// Map free-text answers to structured values for Q2 to ensure the flow branching works
+function mapFreeTextToQ2(text) {
+    if (typeof text !== "string") return text;
+    var l = text.toLowerCase();
+    if (session.path === "engaged") {
+        if (l.indexOf("new project") >= 0 || l.indexOf("build") >= 0 || l.indexOf("spin up") >= 0) return "new-project";
+        if (l.indexOf("cost") >= 0 || l.indexOf("spend") >= 0 || l.indexOf("save") >= 0 || l.indexOf("optimi") >= 0) return "optimize-costs";
+        if (l.indexOf("expand") >= 0 || l.indexOf("new service") >= 0 || l.indexOf("grow") >= 0) return "expand";
+        if (l.indexOf("ai") >= 0 || l.indexOf("machine learning") >= 0 || l.indexOf("ml") >= 0 || l.indexOf("innovat") >= 0) return "ai";
+        if (l.indexOf("support") >= 0 || l.indexOf("help") >= 0 || l.indexOf("hands-on") >= 0) return "support";
+        return "new-project"; // default for engaged
+    } else {
+        if (l.indexOf("understand") >= 0 || l.indexOf("what is") >= 0 || l.indexOf("learn") >= 0) return "explore";
+        if (l.indexOf("compar") >= 0 || l.indexOf("vs") >= 0 || l.indexOf("versus") >= 0 || l.indexOf("alternative") >= 0) return "compare";
+        if (l.indexOf("project") >= 0 || l.indexOf("specific") >= 0 || l.indexOf("problem") >= 0) return "specific-project";
+        if (l.indexOf("ai") >= 0 || l.indexOf("machine learning") >= 0 || l.indexOf("ml") >= 0) return "ai";
+        if (l.indexOf("not sure") >= 0 || l.indexOf("explor") >= 0 || l.indexOf("just looking") >= 0) return "not-sure";
+        return "explore"; // default for greenfield
+    }
+}
+
+async function askQ1() {
+    session.step = "q1";
+    document.getElementById("skip-link").style.display = "block";
+    currentQuestionText = "Which AWS services are you currently using?";
+    await addBot("Quick one - which AWS services are you currently using? Pick any that apply.", 500);
+    showOptions([
+        { label: "Compute", value: "compute" },
+        { label: "Storage", value: "storage" },
+        { label: "Databases", value: "databases" },
+        { label: "AI & ML", value: "ai-ml" },
+        { label: "Analytics", value: "analytics" },
+        { label: "Networking & security", value: "networking" },
+        { label: "Not using AWS yet", value: "none" },
+        { label: "Not sure", value: "not-sure" }
+    ], "Select up to 8, then click Continue", 8);
+}
+</script>
+
+<script>
+async function askQ2() {
+    session.step = "q2";
+    if (session.path === "engaged") {
+        currentQuestionText = "What would you like to get out of this meeting?";
+        await addBot("Great - you're already up and running. What would you like to get out of this meeting?", 500);
+        showOptions([
+            { label: "Kick off a new project", value: "new-project" },
+            { label: "Optimize what we're spending", value: "optimize-costs" },
+            { label: "Expand into new services", value: "expand" },
+            { label: "AI & innovation", value: "ai" },
+            { label: "We need hands-on support", value: "support" },
+            { label: "Other", value: "other" }
+        ], null, 1);
+    } else {
+        currentQuestionText = "What brings you to this meeting?";
+        await addBot("Welcome! What brings you to this meeting?", 500);
+        showOptions([
+            { label: "Want to understand what AWS is", value: "explore" },
+            { label: "Comparing cloud providers", value: "compare" },
+            { label: "Have a specific project in mind", value: "specific-project" },
+            { label: "Interested in AI", value: "ai" },
+            { label: "Not sure yet - just exploring", value: "not-sure" },
+            { label: "Other", value: "other" }
+        ], null, 1);
+    }
+}
+
+async function askQ3() {
+    session.step = "q3";
+    var q2 = session.answers.q2;
+
+    if (q2 === "explore") {
+        currentQuestionText = "What industry are you in?";
+        await addBot("Great starting point. What industry are you in? Helps us show relevant examples.", 500);
+        showOptions([
+            { label: "Finance", value: "finance" },
+            { label: "Retail / E-commerce", value: "retail" },
+            { label: "Healthcare", value: "healthcare" },
+            { label: "Manufacturing", value: "manufacturing" },
+            { label: "Tech / SaaS", value: "tech" },
+            { label: "Public sector", value: "public" },
+            { label: "Other", value: "other" }
+        ], null, 1);
+    } else if (q2 === "compare") {
+        currentQuestionText = "What are you running today?";
+        await addBot("Got it - helpful context. What are you running today?", 500);
+        showOptions([
+            { label: "On-premises servers", value: "on-prem" },
+            { label: "Azure", value: "azure" },
+            { label: "Google Cloud", value: "google" },
+            { label: "A mix of things", value: "mix" },
+            { label: "Not sure / IT manages it", value: "not-sure" },
+            { label: "Other", value: "other" }
+        ], null, 1);
+    } else if (q2 === "specific-project") {
+        currentQuestionText = "What kind of project are you thinking about?";
+        await addBot("Nice - what kind of project are you thinking about?", 500);
+        showOptions([
+            { label: "Building an app or website", value: "app" },
+            { label: "Data & analytics", value: "data" },
+            { label: "Security & compliance", value: "security" },
+            { label: "Reducing costs", value: "cost" },
+            { label: "Other", value: "other" }
+        ], null, 1);
+    } else if (q2 === "new-project") {
+        currentQuestionText = "What kind of project are you spinning up?";
+        await addBot("What kind of project are you spinning up?", 500);
+        showOptions([
+            { label: "New application / microservice", value: "app" },
+            { label: "Data platform / analytics", value: "data" },
+            { label: "Machine learning workload", value: "ml" },
+            { label: "Modernising legacy systems", value: "modernisation" },
+            { label: "Other", value: "other" }
+        ], null, 1);
+    } else if (q2 === "optimize-costs") {
+        currentQuestionText = "Where do you feel the spend pressure most?";
+        await addBot("Makes sense. Where do you feel the spend pressure most?", 500);
+        showOptions([
+            { label: "Compute (EC2 / ECS / Lambda)", value: "compute" },
+            { label: "Storage & data transfer", value: "storage" },
+            { label: "Licensing (third-party, databases)", value: "licensing" },
+            { label: "It's spread everywhere", value: "everywhere" },
+            { label: "Not sure - need visibility first", value: "not-sure" },
+            { label: "Other", value: "other" }
+        ], "Select up to 2, then click Continue", 2);
+    } else if (q2 === "ai") {
+        currentQuestionText = "Where are you at with AI right now?";
+        await addBot("Good one. Where are you at with AI right now?", 500);
+        if (session.path === "engaged") {
+            showOptions([
+                { label: "Evaluating options (Bedrock, SageMaker)", value: "evaluating" },
+                { label: "Have a PoC running", value: "poc" },
+                { label: "Moving to production", value: "production" },
+                { label: "Want to add AI to existing product", value: "add-to-product" },
+                { label: "Other", value: "other" }
+            ], null, 1);
+        } else {
+            showOptions([
+                { label: "Just curious - hearing a lot about it", value: "curious" },
+                { label: "Have an idea but haven't started", value: "idea" },
+                { label: "Experimenting / prototyping", value: "experimenting" },
+                { label: "Want to understand what's possible", value: "whats-possible" },
+                { label: "Other", value: "other" }
+            ], null, 1);
+        }
+    } else if (q2 === "expand") {
+        currentQuestionText = "What area are you looking to expand into?";
+        await addBot("What area are you looking to expand into?", 500);
+        showOptions([
+            { label: "AI & machine learning", value: "ai-expand" },
+            { label: "Containers & serverless", value: "containers" },
+            { label: "Data & analytics", value: "data" },
+            { label: "Multi-region / global", value: "global" },
+            { label: "Not sure - want recommendations", value: "recommendations" },
+            { label: "Other", value: "other" }
+        ], null, 1);
+    } else {
+        await askQ4();
+        return;
+    }
+}
+</script>
+
+<script>
+async function askQ4() {
+    session.step = "q4";
+    if (session.path === "engaged") {
+        currentQuestionText = "What should we prioritise in the meeting?";
+        await addBot("What should we prioritise in the meeting?", 500);
+        showOptions([
+            { label: "Architecture review", value: "architecture" },
+            { label: "Cost optimization", value: "cost" },
+            { label: "Security & compliance", value: "security" },
+            { label: "Performance & scaling", value: "performance" },
+            { label: "Migration planning", value: "migration" },
+            { label: "Roadmap & new services", value: "roadmap" },
+            { label: "Other", value: "other" }
+        ], "Select up to 2, then click Continue", 2);
+    } else {
+        currentQuestionText = "What matters most to you?";
+        await addBot("What matters most to you? We'll make sure to cover these.", 500);
+        showOptions([
+            { label: "Pricing - be transparent", value: "pricing" },
+            { label: "Security & data safety", value: "security" },
+            { label: "How easy is it to get started?", value: "getting-started" },
+            { label: "Will it work reliably?", value: "reliability" },
+            { label: "Local data residency", value: "residency" },
+            { label: "Hands-on support from real people", value: "support" },
+            { label: "Other", value: "other" }
+        ], "Select up to 2, then click Continue", 2);
+    }
+}
+
+async function askQ5() {
+    session.step = "q5";
+    if (session.path === "engaged") {
+        currentQuestionText = "Who's joining the meeting from your side?";
+        await addBot("Last one - who's joining? So we bring the right professionals to the table.", 500);
+        showOptions([
+            { label: "Just me (technical)", value: "solo-tech" },
+            { label: "Just me (business)", value: "solo-biz" },
+            { label: "Engineering team", value: "tech-team" },
+            { label: "Mixed - tech + business", value: "mixed" },
+            { label: "Not sure yet", value: "not-sure" },
+            { label: "Other", value: "other" }
+        ], null, 1);
+    } else {
+        currentQuestionText = "Who's joining from your side?";
+        await addBot("Last one! Who's joining from your side? So we bring the right people too.", 500);
+        showOptions([
+            { label: "Just me (technical)", value: "solo-tech" },
+            { label: "Just me (business)", value: "solo-biz" },
+            { label: "Engineering team", value: "tech-team" },
+            { label: "Mixed - tech + business", value: "mixed" },
+            { label: "Not sure yet", value: "not-sure" },
+            { label: "Other", value: "other" }
+        ], null, 1);
+    }
+}
+
+async function finish() {
+    session.step = "done";
+    endChat();
+    if (session.path === "engaged") {
+        await addBot("Perfect - your account team will be well prepared for the meeting.", 600);
+    } else {
+        await addBot("You're all set! We'll tailor the conversation to what you shared.", 600);
+    }
+    
+    // Ask Bedrock to recommend personalized resources based on the full conversation
+    var typingRow = document.createElement("div");
+    typingRow.className = "message-row bot";
+    typingRow.id = "resources-typing";
+    typingRow.innerHTML = '<div class="avatar bot">aws</div><div class="bubble"><div class="typing-dots"><span class="dot"></span><span class="dot"></span><span class="dot"></span></div></div>';
+    chatArea.appendChild(typingRow);
+    scrollDown();
+    
+    var aiResources = await getAIResources();
+    var typing = document.getElementById("resources-typing");
+    if (typing) typing.remove();
+    
+    if (aiResources && aiResources.length > 0) {
+        await addBot("Here are a few resources picked just for you:", 400);
+        for (var i = 0; i < aiResources.length; i++) {
+            await new Promise(function(res) { setTimeout(res, 350); });
+            addResource(aiResources[i].icon, aiResources[i].text, aiResources[i].url || "");
+        }
+    } else {
+        // Fallback to hardcoded resources if Bedrock fails
+        await addBot("Here are a few resources picked for you:", 400);
+        var resources = getResources();
+        for (var i = 0; i < resources.length; i++) {
+            await new Promise(function(res) { setTimeout(res, 350); });
+            addResource(resources[i].icon, resources[i].text, resources[i].url || "");
+        }
+    }
+    
+    await addBot("Looking forward to our conversation!", 700);
+    showEndState();
+}
+
+// Call Bedrock to get personalized resource recommendations
+async function getAIResources() {
+    try {
+        var response = await fetch(API_URL, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                message: "Based on our conversation, recommend 2-3 specific AWS resources for this customer.",
+                history: conversationHistory,
+                currentQuestion: "RESOURCE_RECOMMENDATION",
+                availableOptions: []
+            })
+        });
+        if (!response.ok) throw new Error("API error");
+        var data = await response.json();
+        
+        // Parse the resources from the reply
+        if (data.resources && data.resources.length > 0) {
+            return data.resources;
+        }
+        // Try to parse from reply text if structured
+        if (data.reply) {
+            return parseResourcesFromReply(data.reply);
+        }
+        return null;
+    } catch (err) {
+        console.error("Resource recommendation error:", err);
+        return null;
+    }
+}
+
+function parseResourcesFromReply(reply) {
+    // Split by newlines or numbered items and create resource cards
+    var lines = reply.split(/\n|(?:\d+\.\s)/).filter(function(l) { return l.trim().length > 10; });
+    var resources = [];
+    for (var i = 0; i < Math.min(lines.length, 3); i++) {
+        resources.push({ icon: "&#128196;", text: lines[i].trim() });
+    }
+    return resources.length > 0 ? resources : null;
+}
+
+function showEndState() {
+    var el = document.createElement("div");
+    el.style.textAlign = "center";
+    el.style.padding = "20px 0 10px";
+    el.innerHTML = '<p style="font-size:13px;color:#687078;margin-bottom:12px;">You can close this page or go back to your meeting details.</p><button class="cta-primary" onclick="goBack()">Back to meeting details</button><br><button class="cta-primary" style="margin-top:10px;background:#000000;" onclick="showBrief()">View Rep Brief</button><p style="font-size:10px;color:#aab7b8;margin-top:6px;">(Demo only - not visible to customers in production)</p>';
+    chatArea.appendChild(el);
+    scrollDown();
+}
+
+function goBack() {
+    // In production: redirect to booking confirmation or referrer
+    if (document.referrer) {
+        window.location.href = document.referrer;
+    } else {
+        window.close();
+    }
+}
+
+function endChat() {
+    document.getElementById("input-area").style.display = "none";
+    document.getElementById("skip-link").style.display = "none";
+}
+
+function getResources() {
+    var q2 = session.answers.q2 || "";
+    var q4 = session.answers.q4 || [];
+    var r = [];
+    if (session.path === "engaged") {
+        if (q2 === "ai" || q2 === "expand") {
+            r.push({ icon: "&#129302;", text: "Amazon Bedrock - Build with Foundation Models" });
+            r.push({ icon: "&#128196;", text: "AWS AI/ML Services Overview" });
+        } else if (q2 === "optimize-costs") {
+            r.push({ icon: "&#128176;", text: "AWS Cost Explorer & Savings Plans" });
+            r.push({ icon: "&#128196;", text: "Cost Optimization Pillar - Well-Architected" });
+        } else if (q2 === "new-project") {
+            r.push({ icon: "&#128208;", text: "AWS Well-Architected Framework" });
+            r.push({ icon: "&#128196;", text: "Reference Architectures" });
+        } else {
+            r.push({ icon: "&#128196;", text: "AWS Support Plans Comparison" });
+            r.push({ icon: "&#128295;", text: "AWS Trusted Advisor" });
+        }
+        if (Array.isArray(q4) && q4.indexOf("security") >= 0) {
+            r.push({ icon: "&#128274;", text: "AWS Security Hub & Best Practices" });
+        }
+    } else {
+        if (q2 === "ai") {
+            r.push({ icon: "&#129302;", text: "What is Generative AI? (3-min explainer)" });
+            r.push({ icon: "&#128196;", text: "AI on AWS - Where to Start" });
+        } else if (q2 === "compare") {
+            r.push({ icon: "&#128202;", text: "Why AWS - Comparison Overview" });
+            r.push({ icon: "&#128196;", text: "Migration: What to Expect" });
+        } else if (q2 === "specific-project") {
+            r.push({ icon: "&#128196;", text: "Getting Started with AWS" });
+            r.push({ icon: "&#127909;", text: "Customer Stories - Similar Projects" });
+        } else {
+            r.push({ icon: "&#9729;", text: "What is AWS? (5-min overview)" });
+            r.push({ icon: "&#128214;", text: "Customer Stories in Your Industry" });
+        }
+        if (Array.isArray(q4) && q4.indexOf("pricing") >= 0) {
+            r.push({ icon: "&#128176;", text: "AWS Pricing - How It Works" });
+        }
+        if (Array.isArray(q4) && q4.indexOf("security") >= 0) {
+            r.push({ icon: "&#128274;", text: "How AWS Keeps Your Data Safe" });
+        }
+    }
+    return r.slice(0, 3);
+}
+</script>
+
+<!-- BRIEF VIEW -->
+<div id="brief-view" style="display:none;">
+    <div class="top-bar">
+        <svg class="aws-logo" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 60" width="60" height="36"><path fill="#ffffff" d="M27.4 27.7c0 1.1.1 2 .4 2.6.2.6.6 1.3.9 2 .2.3.2.5.2.6 0 .3-.2.5-.5.8l-1.5 1c-.2.2-.4.2-.6.2-.3 0-.5-.1-.7-.4-.3-.4-.6-.8-.9-1.2-.3-.5-.5-1-.8-1.6-1.9 2.2-4.2 3.3-7 3.3-2 0-3.6-.6-4.8-1.7-1.2-1.2-1.9-2.7-1.9-4.6 0-2 .7-3.7 2.2-4.9 1.5-1.2 3.4-1.8 5.9-1.8.8 0 1.7.1 2.6.2.9.1 1.8.3 2.8.6v-1.7c0-1.8-.4-3.1-1.1-3.8-.7-.8-2-1.1-3.9-1.1-.8 0-1.7.1-2.6.3-.9.2-1.8.5-2.7.9-.4.2-.7.3-.9.3-.1.1-.3.1-.4.1-.3 0-.5-.2-.5-.7v-1.1c0-.4.1-.6.2-.8.1-.2.3-.3.6-.5.8-.4 1.8-.8 3-1.1 1.2-.3 2.5-.5 3.8-.5 2.9 0 5 .7 6.4 2 1.3 1.3 2 3.3 2 6.1v8zM16 30.4c.8 0 1.6-.1 2.5-.4.9-.3 1.6-.9 2.2-1.6.4-.5.6-1 .7-1.6.1-.6.2-1.3.2-2.1v-1c-.7-.2-1.5-.4-2.3-.5-.8-.1-1.6-.2-2.4-.2-1.6 0-2.8.3-3.6 1-.8.7-1.2 1.6-1.2 2.8 0 1.1.3 2 .9 2.5.6.7 1.5 1.1 3 1.1zm20.4 2.8c-.4 0-.6-.1-.8-.3-.2-.2-.3-.5-.4-.9L30.4 17c-.1-.4-.2-.7-.2-.9 0-.3.2-.5.5-.5h2.3c.4 0 .6.1.8.3.2.2.3.5.4.9l3.6 14.1 3.3-14.1c.1-.4.2-.7.4-.9.2-.2.5-.3.8-.3h1.9c.4 0 .6.1.8.3.2.2.3.5.4.9l3.4 14.3 3.7-14.3c.1-.4.3-.7.4-.9.2-.2.5-.3.8-.3h2.2c.3 0 .5.2.5.5 0 .1 0 .2-.1.4 0 .1-.1.3-.2.5l-5.1 14.9c-.1.4-.3.7-.4.9-.2.2-.5.3-.8.3h-2c-.4 0-.6-.1-.8-.3-.2-.2-.3-.5-.4-.9L43 18.5l-3.2 13.9c-.1.4-.2.7-.4.9-.2.2-.5.3-.8.3h-2.2zm32.8.7c-1.2 0-2.4-.1-3.5-.4-1.1-.3-2-.7-2.6-1.1-.4-.3-.6-.5-.7-.8-.1-.2-.2-.5-.2-.7v-1.2c0-.5.2-.7.5-.7.1 0 .3 0 .4.1.1.1.3.2.6.3.8.4 1.7.7 2.7.9 1 .2 1.9.3 2.9.3 1.5 0 2.7-.3 3.5-.8.8-.5 1.2-1.2 1.2-2.1 0-.6-.2-1.1-.6-1.5-.4-.4-1.2-.8-2.2-1.1l-3.2-1c-1.6-.5-2.7-1.2-3.5-2.1-.8-.9-1.2-1.9-1.2-3.1 0-.9.2-1.7.6-2.4.4-.7.9-1.3 1.6-1.8.7-.5 1.5-.9 2.4-1.1.9-.3 1.9-.4 2.9-.4.5 0 1 0 1.6.1.5.1 1 .2 1.5.3.5.1.9.3 1.3.4.4.2.7.3.9.5.3.2.5.4.6.6.1.2.2.5.2.8v1.1c0 .5-.2.7-.5.7-.2 0-.4-.1-.7-.3-1.2-.6-2.6-.9-4.3-.9-1.4 0-2.4.2-3.2.7-.8.5-1.1 1.2-1.1 2.1 0 .6.2 1.2.7 1.6.4.4 1.2.8 2.3 1.2l3.1 1c1.5.5 2.7 1.2 3.4 2.1.7.9 1.1 1.9 1.1 3 0 .9-.2 1.8-.6 2.5-.4.7-.9 1.4-1.7 1.9-.7.5-1.6.9-2.6 1.2-1.1.3-2.2.5-3.4.5z"/><path fill="#ffffff" d="M66.4 42.5c-7.2 4.3-17.5 6.6-26.4 6.6-12.5 0-23.7-3.7-32.2-9.9-.7-.5-.1-1.2.7-.8 9.2 4.3 20.5 6.9 32.2 6.9 7.9 0 16.6-1.3 24.6-4 1.2-.4 2.2.7 1.1 1.2zm3.5-3.2c-.9-.9-5.9-.5-8.2-.2-.7.1-.8-.4-.2-.8 4-2.2 10.5-1.6 11.3-.8.7.7-.2 6.2-4 8.7-.6.4-1.1.2-.9-.3.8-1.8 2.8-5.6 2-6.6z"/></svg>
+        <span class="top-bar-title">AWS Ready - Pre-Meeting Brief</span>
+    </div>
+    <div class="brief-page" id="brief-page"></div>
+</div>
+
+<style>
+    .brief-page {
+        max-width: 860px;
+        margin: 0 auto;
+        padding: 32px 24px 60px;
+    }
+    .brief-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        flex-wrap: wrap;
+        gap: 12px;
+        margin-bottom: 24px;
+    }
+    .brief-header h1 { font-size: 24px; font-weight: 700; color: #232f3e; margin-bottom: 3px; }
+    .brief-header-sub { font-size: 12px; color: #8c9bab; }
+    .brief-header-meta { display: flex; align-items: center; gap: 14px; font-size: 12px; color: #5f6b7a; flex-wrap: wrap; }
+    .brief-badge { background: #e6f4ea; color: #1a7f37; padding: 3px 10px; border-radius: 10px; font-size: 11px; font-weight: 500; }
+    .brief-actions { display: flex; gap: 8px; margin-bottom: 22px; }
+    .brief-btn { padding: 8px 16px; border-radius: 6px; font-size: 12px; font-weight: 500; cursor: pointer; border: none; font-family: 'Amazon Ember', sans-serif; }
+    .brief-btn-primary { background: #232f3e; color: white; }
+    .brief-btn-primary:hover { background: #1a2332; }    .brief-btn-ghost { background: white; color: #232f3e; border: 1.5px solid #d5dbdb; }
+    .brief-btn-ghost:hover { background: #f9fafb; }
+    .b-card { background: white; border: 1px solid #e8ecf0; border-radius: 10px; padding: 22px 26px; margin-bottom: 16px; }
+    .b-card-grid { display: grid; grid-template-columns: 2fr 3fr; gap: 16px; margin-bottom: 16px; }
+    .b-label { font-size: 16px; font-weight: 700; letter-spacing: 0; color: #16191f; margin-bottom: 14px; text-transform: none; }
+    .b-contact-row { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+    .b-avatar { width: 40px; height: 40px; border-radius: 50%; background: #232f3e; color: white; display: flex; align-items: center; justify-content: center; font-weight: 600; font-size: 14px; }
+    .b-contact-name { font-size: 15px; font-weight: 600; color: #16191f; }
+    .b-contact-detail { font-size: 12px; color: #5f6b7a; }
+    .b-contact-meta { font-size: 12px; color: #687078; padding-top: 8px; border-top: 1px solid #f3f5f7; }
+    .b-priority-card {
+        background: #f0f8ff;
+        border: 1px solid #cce5f7;
+        border-radius: 24px;
+        padding: 24px 28px 28px;
+        position: relative;
+        margin-bottom: 20px;
+    }
+    .b-priority-card::after {
+        content: '';
+        position: absolute;
+        bottom: -10px;
+        left: 28px;
+        width: 20px;
+        height: 20px;
+        background: #f0f8ff;
+        border-radius: 50%;
+        border: 1px solid #cce5f7;
+        border-top-color: transparent;
+        border-right-color: transparent;
+    }
+    .b-priority-card::before {
+        content: '';
+        position: absolute;
+        bottom: -20px;
+        left: 22px;
+        width: 12px;
+        height: 12px;
+        background: #f0f8ff;
+        border-radius: 50%;
+        border: 1px solid #cce5f7;
+        border-top-color: transparent;
+        border-right-color: transparent;
+    }
+    .b-priority-list { list-style: none; padding: 0; }
+    .b-priority-list li { padding: 9px 14px; font-size: 13px; color: #16191f; display: flex; align-items: flex-start; gap: 10px; line-height: 1.5; background: white; border-radius: 6px; margin-bottom: 6px; border: 1px solid #e8ecf0; }
+    .b-priority-list li:last-child { margin-bottom: 0; }
+    .b-dot { width: 8px; height: 8px; background: #0073bb; border-radius: 50%; flex-shrink: 0; margin-top: 5px; }
+    .b-intake { font-size: 13px; line-height: 1.7; color: #2d3748; }
+    .b-intake strong { color: #16191f; }
+    .b-flow { list-style: none; padding: 0; counter-reset: bflow; display: flex; flex-direction: column; gap: 10px; }
+    .b-flow li { counter-increment: bflow; padding: 14px 16px 14px 48px; position: relative; font-size: 13px; line-height: 1.5; color: #2d3748; background: #fafbfc; border: 1px solid #e8ecf0; border-radius: 8px; }
+    .b-flow li::before { content: counter(bflow); position: absolute; left: 12px; top: 13px; width: 26px; height: 26px; background: #232f3e; color: white; border-radius: 50%; font-size: 11px; font-weight: 600; display: flex; align-items: center; justify-content: center; }
+    .b-tp { padding: 14px 16px; border: 1px solid #e8ecf0; border-radius: 8px; margin-bottom: 10px; background: #fafbfc; }
+    .b-tp:last-child { margin-bottom: 0; }
+    .b-tp-title { font-size: 13px; font-weight: 600; color: #16191f; margin-bottom: 2px; }
+    .b-tp-detail { font-size: 12px; color: #4a5568; line-height: 1.5; }
+    .b-tp-detail a { color: #0073bb; text-decoration: none; border-bottom: 1px dotted #0073bb; }
+    .b-tp-detail a:hover { border-bottom-style: solid; }
+    .b-tp-source { display: inline-block; font-size: 10px; color: #8c9bab; background: #f5f7f9; padding: 2px 7px; border-radius: 3px; margin-top: 5px; }
+    .b-tp-star { display: inline-block; background: #eaeded; color: #1a2332; font-size: 10px; font-weight: 600; padding: 2px 7px; border-radius: 3px; margin-bottom: 4px; }
+    .b-warn { padding: 12px 16px; background: #fef7f5; border-left: 3px solid #d13212; border-radius: 0 8px 8px 0; margin-bottom: 10px; font-size: 12px; line-height: 1.5; color: #4a2000; box-shadow: 0 1px 3px rgba(0,0,0,0.04); }
+    .b-warn:last-child { margin-bottom: 0; }
+    .b-nextstep { background: #f0f8ff; border: 1px solid #b8e0f7; border-radius: 8px; padding: 14px 18px; font-size: 13px; line-height: 1.6; color: #0a4a6e; }
+    .b-footer { text-align: center; font-size: 11px; color: #a0aec0; padding-top: 20px; margin-top: 8px; border-top: 1px solid #e8ecf0; }
+    @media (max-width: 700px) { .b-card-grid { grid-template-columns: 1fr; } }
+</style>
+
+<script>
+function showBrief() {
+    document.querySelector(".top-bar").style.display = "none";
+    document.querySelector(".main-content").style.display = "none";
+    document.getElementById("brief-view").style.display = "block";
+    generateBrief();
+}
+
+function generateBrief() {
+    var q2 = session.answers.q2 || "";
+    var q3 = session.answers.q3 || "";
+    var q4 = session.answers.q4 || [];
+    var q5 = session.answers.q5 || "";
+    var path = session.path || "greenfield";
+
+    var meetingType = "Mixed";
+    if (q5 === "solo-tech" || q5 === "tech-team") meetingType = "Technical";
+    else if (q5 === "solo-biz") meetingType = "Business";
+
+    var priorities = getBriefPriorities(q2, q3, q4, path);
+    var intake = getBriefIntake(q2, q3, q4, q5, path);
+    var flow = getBriefFlow(q2, path);
+    var points = getBriefPoints(q2, q4, path);
+    var warns = getBriefWarns(q2, q5, path);
+    var next = getBriefNext(q2, path);
+
+    var h = '';
+    // Header
+    h += '<div class="brief-header"><div><h1>Pre-Meeting Debrief</h1><p class="brief-header-sub">Generated from customer intake + internal data sources</p></div>';
+    h += '<div class="brief-header-meta"><span>&#128197; Meeting scheduled</span><span class="brief-badge">&#10003; Customer completed intake</span></div></div>';
+    // Actions
+    h += '<div class="brief-actions"><button class="brief-btn brief-btn-primary" onclick="copyBriefText()">Copy brief</button><button class="brief-btn brief-btn-ghost" onclick="window.print()">Export PDF</button></div>';
+    // Contact + Priorities
+    h += '<div class="b-card-grid">';
+    h += '<div class="b-card"><div class="b-label">Meeting Contact</div>';
+    h += '<div class="b-contact-row"><div class="b-avatar">C</div><div><div class="b-contact-name">Customer</div><div class="b-contact-detail">From intake chat</div></div></div>';
+    h += '<div class="b-contact-meta">Meeting type: ' + meetingType + '</div></div>';
+    h += '<div class="b-card b-priority-card"><div class="b-label">What They Want to Discuss</div><ul class="b-priority-list">';
+    for (var i = 0; i < priorities.length; i++) h += '<li><span class="b-dot"></span>' + priorities[i] + '</li>';
+    h += '</ul></div></div>';
+    // Intake
+    h += '<div class="b-card"><div class="b-label">From Customer Intake Chat</div><div class="b-intake">' + intake + '</div></div>';
+    // Flow
+    h += '<div class="b-card"><div class="b-label">Suggested Meeting Flow</div><ol class="b-flow">';
+    for (var i = 0; i < flow.length; i++) h += '<li>' + flow[i] + '</li>';
+    h += '</ol></div>';
+    // Talking points
+    h += '<div class="b-card"><div class="b-label">Talking Points</div>';
+    for (var i = 0; i < points.length; i++) {
+        h += '<div class="b-tp">';
+        if (points[i].star) h += '<div class="b-tp-star">&#11088; Start here</div>';
+        h += '<div class="b-tp-title">' + points[i].title + '</div>';
+        h += '<div class="b-tp-detail">' + points[i].detail + '</div>';
+        h += '<span class="b-tp-source">' + points[i].source + '</span></div>';
+    }
+    h += '</div>';
+    // References / Similar projects
+    var refs = getBriefReferences(q2, path);
+    h += '<div class="b-card"><div class="b-label">Similar Projects & References</div>';
+    h += '<div style="display:flex;flex-direction:column;gap:8px;">';
+    for (var i = 0; i < refs.length; i++) {
+        h += '<div style="font-size:13px;line-height:1.5;"><a href="' + refs[i].url + '" target="_blank" style="color:#0073bb;text-decoration:none;border-bottom:1px dotted #0073bb;">' + refs[i].title + '</a><span style="color:#687078;"> - ' + refs[i].desc + '</span></div>';
+    }
+    h += '</div></div>';
+    // Watch out + Next steps (side by side)
+    h += '<div class="b-card-grid">';
+    h += '<div class="b-card"><div class="b-label">Watch Out</div>';
+    for (var i = 0; i < warns.length; i++) h += '<div class="b-warn">' + warns[i] + '</div>';
+    h += '</div>';
+    h += '<div class="b-card"><div class="b-label">Recommended Next Steps</div><div class="b-nextstep">' + next + '</div></div>';
+    h += '</div>';
+    // Footer
+    h += '<div class="b-footer">Brief generated from: customer intake chat (5 questions answered)</div>';
+
+    document.getElementById("brief-page").innerHTML = h;
+}
+
+function copyBriefText() {
+    var text = document.getElementById("brief-page").innerText;
+    navigator.clipboard.writeText(text).then(function() {
+        var btn = document.querySelector(".brief-btn-primary");
+        btn.textContent = "Copied!";
+        setTimeout(function() { btn.textContent = "Copy brief"; }, 2000);
+    });
+}
+
+function getBriefPriorities(q2, q3, q4, path) {
+    var p = [];
+    var m = {"optimize-costs":"Cut AWS spend","new-project":"New project","ai":"AI/ML","expand":"Expand services","compare":"Evaluating AWS vs others","explore":"Understand AWS","specific-project":"Specific project","support":"Needs support"};
+    if (m[q2]) p.push(m[q2]); else p.push("Exploring");
+    if (Array.isArray(q4)) {
+        var f = {"cost":"Pricing","pricing":"Pricing","performance":"Performance","security":"Security","architecture":"Architecture review","getting-started":"Easy start","reliability":"Reliability","residency":"Data residency","support":"Expert support","migration":"Migration","roadmap":"New services"};
+        q4.forEach(function(v) { if (f[v]) p.push(f[v]); });
+    }
+    return p.slice(0, 4);
+}
+
+function getBriefIntake(q2, q3, q4, q5, path) {
+    var s = path === "engaged" ? "<strong>Active user.</strong> " : "<strong>Greenfield.</strong> ";
+    var intent = {"optimize-costs":"Wants to <strong>cut costs</strong> and get predictability.","ai":"Interested in <strong>AI/ML</strong>.","new-project":"Starting a <strong>new project</strong>.","compare":"<strong>Comparing providers</strong> - competitive deal.","expand":"Wants to <strong>expand</strong> beyond current usage.","explore":"First time exploring AWS.","specific-project":"Has a <strong>specific project</strong> to solve."};
+    s += intent[q2] || "General exploration.";
+    var att = {"solo-tech":" Technical contact - go deep.","tech-team":" Engineering team - expect depth.","solo-biz":" Business contact - outcomes + ROI.","mixed":" Mixed audience - balance tech with outcomes."};
+    if (att[q5]) s += att[q5];
+    return s;
+}
+
+function getBriefFlow(q2, path) {
+    var f = [];
+    var flows = {
+        "optimize-costs": [
+            "Open: 'I saw you're looking to optimize spend - let me show what we've found.'",
+            "Pull up their top 3 cost drivers (prep via Cost Explorer or Trusted Advisor)",
+            "Walk through specific savings: Savings Plans, Reserved Instances, right-sizing",
+            "Show how other companies of similar size saved 20-40%",
+            "Close: Propose a Cost Optimization Review with CFM specialist in next 2 weeks"
+        ],
+        "ai": [
+            "Open: 'You mentioned AI - let me show what's working for companies like yours.'",
+            "Ask: What problem are they trying to solve? Customer-facing or internal?",
+            "Demo Bedrock: show how fast they can prototype with foundation models",
+            "Share 1-2 case studies from their industry",
+            "Close: Propose an AI Discovery Workshop to scope their first use case"
+        ],
+        "new-project": [
+            "Open: 'Let's talk about your new project - what does success look like?'",
+            "Clarify timeline, team size, and integration requirements",
+            "Show reference architecture for their project type",
+            "Discuss build vs buy decisions and where AWS accelerates",
+            "Close: Offer Architecture Review with SA + PoC credits to get started"
+        ],
+        "specific-project": [
+            "Open: 'Let's talk about your project - what does success look like?'",
+            "Clarify timeline, team size, and integration requirements",
+            "Show reference architecture for their project type",
+            "Discuss build vs buy decisions and where AWS accelerates",
+            "Close: Offer Architecture Review with SA + PoC credits to get started"
+        ],
+        "compare": [
+            "Open: 'What criteria matter most in your comparison?'",
+            "Listen first - understand what they've seen from other providers",
+            "Position AWS differentiators specific to their criteria",
+            "Address their top concern head-on (pricing, lock-in, complexity)",
+            "Close: Propose a PoC where they test with actual workloads - evidence over slides"
+        ],
+        "expand": [
+            "Open: 'What's the next capability you need that you don't have today?'",
+            "Map their current architecture and identify natural expansion points",
+            "Show how new services integrate with what they already run",
+            "Share examples from similar customers who expanded successfully",
+            "Close: Schedule deep-dive with the relevant service specialist"
+        ]
+    };
+    var defaultFlow = [
+        "Open: Reference what they shared in intake - shows you came prepared",
+        "Ask: 'What triggered this conversation now?' (understand urgency)",
+        "Show 2-3 relevant examples from their industry",
+        "Address their top priority from intake directly",
+        "Close: Propose a clear, low-commitment next step based on their interest"
+    ];
+    return flows[q2] || defaultFlow;
+}
+
+function getBriefPoints(q2, q4, path) {
+    var pts = [];
+    var tp = {
+        "optimize-costs": [
+            {star:true, title:"Savings Plans", detail:'Present <a href="https://aws.amazon.com/savingsplans/" target="_blank">commitment options</a> with projected savings.', source:"Intake"},
+            {star:false, title:"Right-sizing", detail:'Use <a href="https://aws.amazon.com/aws-cost-management/aws-cost-optimization/" target="_blank">Cost Optimization</a> tools to find over-provisioned instances.', source:"Best practice"},
+            {star:false, title:"Cost Explorer", detail:'Demo <a href="https://aws.amazon.com/aws-cost-management/aws-cost-explorer/" target="_blank">Cost Explorer</a> for spend visibility.', source:"Best practice"}
+        ],
+        "ai": [
+            {star:true, title:"Bedrock", detail:'Show <a href="https://aws.amazon.com/bedrock/" target="_blank">Amazon Bedrock</a> - foundation models, no infra.', source:"Intake"},
+            {star:false, title:"Start small", detail:'One use case, iterate. See <a href="https://aws.amazon.com/ai/generative-ai/" target="_blank">GenAI guide</a>.', source:"Best practice"},
+            {star:false, title:"Credits", detail:'<a href="https://aws.amazon.com/activate/" target="_blank">AWS Activate</a> + AI/ML workshop programs.', source:"Programs"}
+        ],
+        "new-project": [
+            {star:true, title:"Architecture", detail:'Bring a diagram. Use <a href="https://aws.amazon.com/architecture/" target="_blank">Reference Architectures</a>.', source:"Intake"},
+            {star:false, title:"Well-Architected", detail:'Offer <a href="https://aws.amazon.com/architecture/well-architected/" target="_blank">Well-Architected</a> review before they build.', source:"Best practice"},
+            {star:false, title:"PoC credits", detail:'Credits + SA support via <a href="https://aws.amazon.com/solutions/implementations/" target="_blank">PoC program</a>.', source:"Programs"}
+        ],
+        "specific-project": [
+            {star:true, title:"Architecture", detail:'Bring a diagram. Use <a href="https://aws.amazon.com/architecture/" target="_blank">Reference Architectures</a>.', source:"Intake"},
+            {star:false, title:"Well-Architected", detail:'Offer <a href="https://aws.amazon.com/architecture/well-architected/" target="_blank">Well-Architected</a> review before they build.', source:"Best practice"},
+            {star:false, title:"PoC credits", detail:'Credits + SA support via <a href="https://aws.amazon.com/solutions/implementations/" target="_blank">PoC program</a>.', source:"Programs"}
+        ],
+        "compare": [
+            {star:true, title:"Their criteria", detail:"Let them define the comparison. Don't assume.", source:"Best practice"},
+            {star:false, title:"AWS strengths", detail:'Position <a href="https://aws.amazon.com/what-is-aws/" target="_blank">differentiators</a> for their use case.', source:"Best practice"},
+            {star:false, title:"PoC", detail:'Offer <a href="https://aws.amazon.com/free/" target="_blank">free tier</a> + PoC credits. Evidence > slides.', source:"Programs"}
+        ]
+    };
+    pts = tp[q2] || [
+        {star:true, title:"Industry examples", detail:'Check <a href="https://aws.amazon.com/solutions/case-studies/" target="_blank">customer stories</a> for their vertical.', source:"Best practice"},
+        {star:false, title:"Keep simple", detail:"2-3 relevant services only.", source:"Best practice"},
+        {star:false, title:"Low barrier", detail:'Mention <a href="https://aws.amazon.com/free/" target="_blank">free tier</a> + credit programs.', source:"Programs"}
+    ];
+    if (Array.isArray(q4) && q4.indexOf("security") >= 0) {
+        pts.push({star:false, title:"Security", detail:'Flagged by customer. Review <a href="https://aws.amazon.com/security/" target="_blank">shared responsibility model</a>.', source:"Intake"});
+    }
+    return pts;
+}
+
+function getBriefReferences(q2, path) {
+    var refs = {
+        "optimize-costs": [
+            {title:"How Siemens saved 30% on AWS", url:"https://aws.amazon.com/solutions/case-studies/siemens/", desc:"Enterprise cost optimization at scale"},
+            {title:"AWS Cost Optimization Pillar", url:"https://docs.aws.amazon.com/wellarchitected/latest/cost-optimization-pillar/welcome.html", desc:"Well-Architected framework"},
+            {title:"Savings Plans FAQ", url:"https://aws.amazon.com/savingsplans/faq/", desc:"Commitment options explained"}
+        ],
+        "ai": [
+            {title:"How Ryanair uses GenAI", url:"https://aws.amazon.com/solutions/case-studies/ryanair/", desc:"Customer-facing AI at scale"},
+            {title:"Amazon Bedrock use cases", url:"https://aws.amazon.com/bedrock/use-cases/", desc:"Common starting points"},
+            {title:"AI/ML customer stories", url:"https://aws.amazon.com/machine-learning/customers/", desc:"Industry examples"}
+        ],
+        "new-project": [
+            {title:"AWS Architecture Center", url:"https://aws.amazon.com/architecture/", desc:"Reference architectures by use case"},
+            {title:"AWS Well-Architected Labs", url:"https://www.wellarchitectedlabs.com/", desc:"Hands-on best practices"},
+            {title:"Startup case studies", url:"https://aws.amazon.com/startups/customers/", desc:"How startups build on AWS"}
+        ],
+        "specific-project": [
+            {title:"AWS Architecture Center", url:"https://aws.amazon.com/architecture/", desc:"Reference architectures by use case"},
+            {title:"AWS Well-Architected Labs", url:"https://www.wellarchitectedlabs.com/", desc:"Hands-on best practices"},
+            {title:"Solution implementations", url:"https://aws.amazon.com/solutions/implementations/", desc:"Ready-to-deploy solutions"}
+        ],
+        "compare": [
+            {title:"Why AWS - analyst reports", url:"https://aws.amazon.com/resources/analyst-reports/", desc:"Gartner, Forrester, IDC"},
+            {title:"Migration success stories", url:"https://aws.amazon.com/cloud-migration/", desc:"Companies that switched to AWS"},
+            {title:"AWS vs alternatives", url:"https://aws.amazon.com/what-is-aws/", desc:"Key differentiators"}
+        ],
+        "expand": [
+            {title:"What's new on AWS", url:"https://aws.amazon.com/new/", desc:"Latest service launches"},
+            {title:"AWS re:Invent recaps", url:"https://aws.amazon.com/blogs/aws/", desc:"Recent announcements"},
+            {title:"Customer stories by industry", url:"https://aws.amazon.com/solutions/case-studies/", desc:"How others expanded"}
+        ]
+    };
+    var defaultRefs = [
+        {title:"AWS customer stories", url:"https://aws.amazon.com/solutions/case-studies/", desc:"Filter by industry and use case"},
+        {title:"Getting started with AWS", url:"https://aws.amazon.com/getting-started/", desc:"First steps guide"},
+        {title:"AWS Free Tier", url:"https://aws.amazon.com/free/", desc:"Try services at no cost"}
+    ];
+    return refs[q2] || defaultRefs;
+}
+
+function getBriefWarns(q2, q5, path) {    var w = [];
+    if (q5 === "mixed") w.push("Mixed audience. Balance tech depth with business outcomes.");
+    if (q5 === "solo-biz") w.push("Business audience. Skip architecture, focus on ROI.");
+    if (q2 === "optimize-costs") w.push("Cost pressure. Don't pitch new spend.");
+    if (q2 === "compare") w.push("Competitive deal. Don't bash - position on strengths.");
+    if (path === "greenfield") w.push("Greenfield. No jargon.");
+    if (w.length === 0) w.push("Engaged customer. Don't over-sell.");
+    return w.slice(0, 3);
+}
+
+function getBriefNext(q2, path) {
+    var n = {
+        "optimize-costs": "<strong>1.</strong> Schedule Cost Optimization Review (CFM specialist, within 2 weeks)<br><strong>2.</strong> Send Savings Plans calculator link as follow-up<br><strong>3.</strong> If engaged: propose Savings Plan commitment in next QBR",
+        "ai": "<strong>1.</strong> Schedule AI Discovery Workshop (scope first use case)<br><strong>2.</strong> Share Bedrock getting-started guide after meeting<br><strong>3.</strong> Connect them with AI/ML specialist SA for architecture",
+        "new-project": "<strong>1.</strong> Schedule Architecture Review with specialist SA<br><strong>2.</strong> Share relevant reference architecture doc<br><strong>3.</strong> Set up PoC environment with credits if timeline is tight",
+        "specific-project": "<strong>1.</strong> Schedule Architecture Review with specialist SA<br><strong>2.</strong> Share relevant reference architecture doc<br><strong>3.</strong> Set up PoC environment with credits if timeline is tight",
+        "compare": "<strong>1.</strong> Propose PoC with their real workloads (offer credits + SA support)<br><strong>2.</strong> Send comparison materials relevant to their criteria<br><strong>3.</strong> Schedule technical deep-dive on their #1 concern",
+        "expand": "<strong>1.</strong> Schedule deep-dive with relevant service specialist<br><strong>2.</strong> Share getting-started guide for target service<br><strong>3.</strong> Propose a pilot in their existing environment"
+    };
+    var defaultNext = "<strong>1.</strong> Identify their strongest interest and match with a specialist<br><strong>2.</strong> Send relevant resources from the meeting<br><strong>3.</strong> Schedule follow-up within 2 weeks";
+    return n[q2] || defaultNext;
+}
+</script>
+</body>
+</html>
+
+
+
