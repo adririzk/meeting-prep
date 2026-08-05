@@ -373,10 +373,15 @@ async function sendMessage() {
             replyLower.indexOf("take the time") >= 0 ||
             replyLower.indexOf("reschedule") >= 0 ||
             replyLower.indexOf("whenever you") >= 0 ||
-            replyLower.indexOf("no pressure") >= 0;
+            replyLower.indexOf("no pressure") >= 0 ||
+            replyLower.indexOf("what specifically") >= 0 ||
+            replyLower.indexOf("what would need to change") >= 0 ||
+            replyLower.indexOf("tell me more") >= 0 ||
+            replyLower.indexOf("can you elaborate") >= 0;
         
         // If not relevant, don't advance - show continue/skip options
         if (isRedirect) {
+            await addBotAck("Would you like to continue with the next question, or skip this one?", 300);
             showOptions([
                 { label: "Continue", value: "continue" },
                 { label: "Skip this question", value: "skip" }
