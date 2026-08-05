@@ -148,7 +148,7 @@
 <script>
 var chatArea = document.getElementById("chat-area");
 var optionsArea = document.getElementById("options-area");
-var session = { step: null, answers: {}, multiSelect: [], path: null };
+var session = { step: null, answers: {}, multiSelect: [], path: null, awaitingRetry: false };
 
 // ═══ BEDROCK INTEGRATION ═══
 var API_URL = "https://yb0irqcgy2.execute-api.us-east-1.amazonaws.com/chat";
@@ -282,6 +282,19 @@ function selectOption(btn, value, multiMax) {
         hideOptions();
         addUser(btn.textContent);
         trackUserMessage(btn.textContent);
+        
+        // Handle off-topic recovery options
+        if (session.awaitingRetry) {
+            session.awaitingRetry = false;
+            if (value === "continue") {
+                // Re-show the current question with its original options
+                reShowCurrentQuestion();
+            } else if (value === "skip") {
+                processAnswer("skip", false);
+            }
+            return;
+        }
+        
         processAnswer(value, false); // false = pill click, no Bedrock call needed
     } else {
         if (btn.classList.contains("selected")) {
@@ -337,10 +350,13 @@ async function sendMessage() {
             await addBotAck(aiResult.reply, 300);
         }
         
-        // If not relevant, don't advance - re-show options
+        // If not relevant, don't advance - show continue/skip options
         if (!aiResult.relevant) {
-            // Re-ask the current question by re-showing options
-            reShowCurrentQuestion();
+            showOptions([
+                { label: "Continue", value: "continue" },
+                { label: "Skip this question", value: "skip" }
+            ], null, 1);
+            session.awaitingRetry = true;
             return;
         }
         
