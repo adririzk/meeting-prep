@@ -170,18 +170,25 @@ async function handleResourceRecommendation(conversationHistory) {
 
 RULES:
 - Pick resources specific to their industry, use case, and concerns
-- Each resource should have a title and a brief one-line description
-- Use real AWS resource names (e.g., "Amazon Bedrock Getting Started Guide", "AWS Cost Explorer", "AWS Well-Architected Framework")
+- Each resource should have a title, a brief one-line description, and a real AWS URL
+- Use real AWS resource names and real URLs from aws.amazon.com
 - Match the resource to what they actually said, not generic recommendations
 
 RESPONSE FORMAT (JSON only, no markdown):
 {"resources": [
-  {"icon": "emoji", "text": "Resource title - brief description"},
-  {"icon": "emoji", "text": "Resource title - brief description"},
-  {"icon": "emoji", "text": "Resource title - brief description"}
+  {"icon": "&#128196;", "text": "Resource title - brief description", "url": "https://aws.amazon.com/..."},
+  {"icon": "&#128196;", "text": "Resource title - brief description", "url": "https://aws.amazon.com/..."},
+  {"icon": "&#128196;", "text": "Resource title - brief description", "url": "https://aws.amazon.com/..."}
 ]}
 
-Use relevant emojis as HTML entities: &#128196; (document), &#129302; (robot/AI), &#128176; (money), &#128274; (security), &#128208; (chart), &#9729; (cloud), &#127909; (video)`;
+Icon options (use HTML entities):
+- &#128196; for documents/guides
+- &#129302; for AI/ML
+- &#128176; for cost/pricing
+- &#128274; for security
+- &#128208; for analytics/charts
+- &#9729; for cloud/general
+- &#127909; for videos/case studies`;
 
   let contextSummary = "Here's the full conversation with the customer:\n";
   conversationHistory.forEach((entry) => {
