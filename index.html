@@ -136,7 +136,7 @@
             <p class="section-label">Ready to start</p>
         </div>
         <div id="options-area" style="display:none;"></div>
-        <div class="input-area" id="input-area">
+        <div class="input-area" id="input-area" style="display:none;">
             <textarea id="user-input" placeholder="Type your answer..." rows="1"
                 onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendMessage();}"></textarea>
             <button class="send-btn" onclick="sendMessage()">&#10148;</button>
@@ -283,6 +283,15 @@ function hideOptions() { optionsArea.style.display = "none"; optionsArea.innerHT
 
 function selectOption(btn, value, multiMax) {
     if (!multiMax || multiMax <= 1) {
+        // If "other" or "something else" is clicked, show text input
+        if (value === "other") {
+            hideOptions();
+            document.getElementById("input-area").style.display = "flex";
+            document.getElementById("user-input").placeholder = "Tell us more...";
+            document.getElementById("user-input").focus();
+            return;
+        }
+        
         hideOptions();
         addUser(btn.textContent);
         trackUserMessage(btn.textContent);
@@ -299,7 +308,7 @@ function selectOption(btn, value, multiMax) {
             return;
         }
         
-        processAnswer(value, false); // false = pill click, no Bedrock call needed
+        processAnswer(value, false);
     } else {
         if (btn.classList.contains("selected")) {
             btn.classList.remove("selected");
@@ -330,6 +339,8 @@ async function sendMessage() {
     input.value = "";
     hideOptions();
     hideWelcomeCTA();
+    // Hide the input area after they submit their typed answer
+    document.getElementById("input-area").style.display = "none";
     addUser(text);
     trackUserMessage(text);
     
