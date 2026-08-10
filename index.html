@@ -188,6 +188,29 @@ async function callBedrock(userText) {
 
 window.onload = function() { setTimeout(beginChat, 400); };
 
+// Ensure answers are saved even if user leaves early
+window.addEventListener("beforeunload", function() {
+    if (session.step && session.step !== "welcome" && session.step !== "done") {
+        var conversationId = session.conversationId || (crypto.randomUUID ? crypto.randomUUID() : 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+            var r = Math.random() * 16 | 0, v = c === 'x' ? r : (r & 0x3 | 0x8);
+            return v.toString(16);
+        }));
+        var payload = JSON.stringify({
+            conversationId: conversationId,
+            answers: {
+                topic: session.answers.q2 || "",
+                desired_outcome: session.answers.q3 || "",
+                timeline: Array.isArray(session.answers.q4) ? session.answers.q4.join(", ") : (session.answers.q4 || ""),
+                attendees: session.answers.q5 || "",
+                preparation: Array.isArray(session.answers.q1) ? session.answers.q1.join(", ") : (session.answers.q1 || ""),
+                additional_notes: session.path || ""
+            }
+        });
+        var blob = new Blob([payload], { type: "application/json" });
+        navigator.sendBeacon("https://yb0irqcgy2.execute-api.us-east-1.amazonaws.com/submit", blob);
+    }
+});
+
 function scrollDown() { setTimeout(function() { window.scrollTo(0, document.body.scrollHeight); }, 60); }
 
 function addBot(text, delay) {
@@ -283,7 +306,7 @@ function hideOptions() { optionsArea.style.display = "none"; optionsArea.innerHT
 
 function selectOption(btn, value, multiMax) {
     if (!multiMax || multiMax <= 1) {
-        // If "other" or "something else" is clicked, show text input
+        // If "other" is clicked, show text input
         if (value === "other") {
             hideOptions();
             document.getElementById("input-area").style.display = "flex";
@@ -313,6 +336,15 @@ function selectOption(btn, value, multiMax) {
         
         processAnswer(value, false);
     } else {
+        // In multi-select, if "other" is clicked, show text input
+        if (value === "other") {
+            hideOptions();
+            document.getElementById("input-area").style.display = "flex";
+            document.getElementById("user-input").placeholder = "Tell us more...";
+            document.getElementById("user-input").focus();
+            return;
+        }
+        
         if (btn.classList.contains("selected")) {
             btn.classList.remove("selected");
             session.multiSelect = session.multiSelect.filter(function(v) { return v !== value; });
@@ -447,6 +479,8 @@ async function processAnswer(value, fromFreeText) {
         await askQ5();
     } else if (s === "q5") {
         session.answers.q5 = value;
+        // Save to DynamoDB immediately (don't wait for finish to complete)
+        submitAnswers();
         await finish();
     }
     
@@ -722,9 +756,6 @@ async function submitAnswers() {
 async function finish() {
     session.step = "done";
     endChat();
-    
-    // Submit answers to DynamoDB
-    var submitSuccess = await submitAnswers();
     
     if (session.path === "engaged") {
         await addBot("Perfect - your account team will be well prepared for the meeting.", 600);
