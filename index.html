@@ -47,6 +47,12 @@
         .hero-icon span { color: white; font-size: 11px; font-weight: 700; font-family: 'Amazon Ember', sans-serif; }
         .hero h1 { font-size: 20px; font-weight: 700; color: #16191f; margin-bottom: 2px; }
         .hero p { font-size: 14px; color: #687078; }
+        .progress-wrap { max-width: 680px; width: 100%; margin: 0 auto; padding: 0 20px; }
+        .progress-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
+        .progress-label { font-size: 11px; color: #687078; font-weight: 500; }
+        .progress-count { font-size: 11px; color: #aab7b8; }
+        .progress-track { background: #eaeded; border-radius: 4px; height: 5px; overflow: hidden; }
+        .progress-fill { background: #FF9900; height: 100%; border-radius: 4px; width: 0; transition: width 0.4s ease; }
         .chat-area {
             flex: 1; display: flex; flex-direction: column; gap: 14px;
             overflow-y: auto; padding-bottom: 16px;
@@ -131,6 +137,13 @@
             <div class="hero-icon"><span>aws</span></div>
             <h1>AWS Ready</h1>
             <p>Get the most out of your meeting</p>
+        </div>
+        <div class="progress-wrap" id="progress-wrap" style="display:none;">
+            <div class="progress-row">
+                <span class="progress-label" id="progress-label">Question 1 of 5</span>
+                <span class="progress-count" id="progress-count">Takes ~2 min</span>
+            </div>
+            <div class="progress-track"><div class="progress-fill" id="progress-fill"></div></div>
         </div>
         <div class="chat-area" id="chat-area">
             <p class="section-label">Ready to start</p>
@@ -245,6 +258,8 @@ async function generateQuestion(theme) {
 async function askDynamic(theme, step, staticFallbackFn) {
     session.step = step;
     document.getElementById("skip-link").style.display = "block";
+    // Update progress bar (q2->2, q3->3, etc.)
+    setProgress(parseInt(step.replace("q", ""), 10));
 
     // Show typing indicator while Claude generates
     var typingRow = document.createElement("div");
@@ -304,6 +319,23 @@ window.addEventListener("beforeunload", function() {
 });
 
 function scrollDown() { setTimeout(function() { window.scrollTo(0, document.body.scrollHeight); }, 60); }
+
+// Update the progress bar. n = current question number (1-5), total = 5.
+var TOTAL_QUESTIONS = 5;
+function setProgress(n) {
+    var wrap = document.getElementById("progress-wrap");
+    if (n <= 0) { wrap.style.display = "none"; return; }
+    wrap.style.display = "block";
+    var pct = Math.round((n / TOTAL_QUESTIONS) * 100);
+    document.getElementById("progress-fill").style.width = pct + "%";
+    if (n >= TOTAL_QUESTIONS) {
+        document.getElementById("progress-label").textContent = "All done!";
+        document.getElementById("progress-count").textContent = "";
+    } else {
+        document.getElementById("progress-label").textContent = "Question " + n + " of " + TOTAL_QUESTIONS;
+        document.getElementById("progress-count").textContent = "Takes ~2 min";
+    }
+}
 
 function addBot(text, delay) {
     if (!delay) delay = 500;
@@ -619,6 +651,7 @@ function mapFreeTextToQ2(text) {
 async function askQ1() {
     session.step = "q1";
     document.getElementById("skip-link").style.display = "block";
+    setProgress(1);
     currentQuestionText = "Which AWS services are you currently using?";
     await addBot("Quick one - which AWS services are you currently using? Pick any that apply.", 500);
     showOptions([
@@ -885,6 +918,7 @@ async function submitAnswers() {
 
 async function finish() {
     session.step = "done";
+    setProgress(TOTAL_QUESTIONS); // 100% - "All done!"
     endChat();
     
     if (session.path === "engaged") {
