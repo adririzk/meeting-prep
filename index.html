@@ -190,6 +190,73 @@ async function callBedrock(userText) {
     }
 }
 
+// Ask Claude to generate the next question + options, adapted to the conversation context.
+// Returns { question, options: [{label, value}], multiSelect, maxSelect } or null on failure.
+async function generateQuestion(theme) {
+    try {
+        var response = await fetch(API_URL, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                message: "generate next question",
+                history: conversationHistory.slice(-20),
+                currentQuestion: "GENERATE_QUESTION",
+                questionTheme: theme
+            })
+        });
+        if (!response.ok) throw new Error("API error");
+        var data = await response.json();
+        if (!data.question || !Array.isArray(data.options) || data.options.length === 0) return null;
+        // Convert string options into {label, value} objects, add "Other"
+        var opts = data.options.map(function(o) {
+            return { label: o, value: o.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") };
+        });
+        opts.push({ label: "Other", value: "other" });
+        return {
+            question: data.question,
+            options: opts,
+            multiSelect: data.multiSelect === true,
+            maxSelect: data.maxSelect || 1
+        };
+    } catch (err) {
+        console.error("Generate question error:", err);
+        return null;
+    }
+}
+
+// Show a dynamically generated question. Falls back to the static askFn if Claude fails.
+async function askDynamic(theme, step, staticFallbackFn) {
+    session.step = step;
+    document.getElementById("skip-link").style.display = "block";
+
+    // Show typing indicator while Claude generates
+    var typingRow = document.createElement("div");
+    typingRow.className = "message-row bot";
+    typingRow.id = "gen-typing";
+    typingRow.innerHTML = '<div class="avatar bot">aws</div><div class="bubble"><div class="typing-dots"><span class="dot"></span><span class="dot"></span><span class="dot"></span></div></div>';
+    chatArea.appendChild(typingRow);
+    scrollDown();
+
+    var generated = await generateQuestion(theme);
+
+    var typing = document.getElementById("gen-typing");
+    if (typing) typing.remove();
+
+    if (!generated) {
+        // Fallback to the hardcoded question
+        await staticFallbackFn();
+        return;
+    }
+
+    currentQuestionText = generated.question;
+    await addBot(generated.question, 400);
+    if (generated.multiSelect && generated.maxSelect > 1) {
+        showOptions(generated.options, "Select up to " + generated.maxSelect + ", then click Continue", generated.maxSelect);
+    } else {
+        showOptions(generated.options, null, 1);
+    }
+}
+
 window.onload = function() { setTimeout(beginChat, 400); };
 
 // Ensure answers are saved even if user leaves early
@@ -473,16 +540,19 @@ async function processAnswer(value, fromFreeText) {
         }
         await askQ2();
     } else if (s === "q2") {
-        session.answers.q2 = (typeof value === "string") ? mapFreeTextToQ2(value) : value[0];
+        // Store the readable answer (last user message) for the brief, and map for static fallback branching
+        var q2Readable = lastUserAnswer(value);
+        session.answers.q2 = q2Readable;
+        session.answers.q2mapped = mapFreeTextToQ2(q2Readable);
         await askQ3();
     } else if (s === "q3") {
-        session.answers.q3 = value;
+        session.answers.q3 = lastUserAnswer(value);
         await askQ4();
     } else if (s === "q4") {
-        session.answers.q4 = value;
+        session.answers.q4 = Array.isArray(value) ? value : lastUserAnswer(value);
         await askQ5();
     } else if (s === "q5") {
-        session.answers.q5 = value;
+        session.answers.q5 = lastUserAnswer(value);
         // Save to DynamoDB immediately (don't wait for finish to complete)
         submitAnswers();
         await finish();
@@ -491,7 +561,20 @@ async function processAnswer(value, fromFreeText) {
     // Final save happens in finish()
 }
 
-// Map free-text answers to structured values for Q2 to ensure the flow branching works
+// Get a readable string for an answer value. Arrays are joined; the last tracked
+// user message (the pill label or typed text) is preferred over slugified values.
+function lastUserAnswer(value) {
+    if (Array.isArray(value)) return value.join(", ");
+    // Find the last user message in conversation history (the readable label/text)
+    for (var i = conversationHistory.length - 1; i >= 0; i--) {
+        if (conversationHistory[i].role === "user") {
+            return conversationHistory[i].text;
+        }
+    }
+    return (typeof value === "string") ? value : "";
+}
+
+// Map free-text answers to structured values for Q2 to ensure the static-fallback branching works
 function mapFreeTextToQ2(text) {
     if (typeof text !== "string") return text;
     var l = text.toLowerCase();
@@ -531,7 +614,12 @@ async function askQ1() {
 </script>
 
 <script>
+// Q2 — Claude generates the question adapted to their AWS usage (Q1). Falls back to static.
 async function askQ2() {
+    await askDynamic("intent", "q2", askQ2Static);
+}
+
+async function askQ2Static() {
     session.step = "q2";
     if (session.path === "engaged") {
         currentQuestionText = "What would you like to get out of this meeting?";
@@ -558,9 +646,14 @@ async function askQ2() {
     }
 }
 
+// Q3 — Claude digs deeper into their intent (Q2). Falls back to static.
 async function askQ3() {
+    await askDynamic("context", "q3", askQ3Static);
+}
+
+async function askQ3Static() {
     session.step = "q3";
-    var q2 = session.answers.q2;
+    var q2 = session.answers.q2mapped || mapFreeTextToQ2(session.answers.q2 || "");
 
     if (q2 === "explore") {
         currentQuestionText = "What industry are you in?";
@@ -655,7 +748,12 @@ async function askQ3() {
 </script>
 
 <script>
+// Q4 — Claude asks what success looks like / their concerns, adapted to context. Falls back to static.
 async function askQ4() {
+    await askDynamic("success", "q4", askQ4Static);
+}
+
+async function askQ4Static() {
     session.step = "q4";
     if (session.path === "engaged") {
         currentQuestionText = "What would make this meeting a success for you?";
@@ -669,21 +767,25 @@ async function askQ4() {
             { label: "Other", value: "other" }
         ], "Select up to 2, then click Continue", 2);
     } else {
-        currentQuestionText = "What matters most to you?";
-        await addBot("What matters most to you? We'll make sure to cover these.", 500);
+        currentQuestionText = "What questions or concerns do you have about the cloud?";
+        await addBot("What questions or concerns do you have about the cloud? We'll make sure to address them.", 500);
         showOptions([
-            { label: "Pricing - be transparent", value: "pricing" },
-            { label: "Security & data safety", value: "security" },
-            { label: "How easy is it to get started?", value: "getting-started" },
-            { label: "Will it work reliably?", value: "reliability" },
-            { label: "Local data residency", value: "residency" },
-            { label: "Hands-on support from real people", value: "support" },
+            { label: "Is it expensive?", value: "cost-concern" },
+            { label: "Is my data safe?", value: "security-concern" },
+            { label: "Is it hard to move?", value: "migration-concern" },
+            { label: "Where do I even start?", value: "getting-started-concern" },
+            { label: "Will it actually help my business?", value: "value-concern" },
             { label: "Other", value: "other" }
         ], "Select up to 2, then click Continue", 2);
     }
 }
 
+// Q5 — who's joining. Claude adapts phrasing, falls back to static.
 async function askQ5() {
+    await askDynamic("attendees", "q5", askQ5Static);
+}
+
+async function askQ5Static() {
     session.step = "q5";
     if (session.path === "engaged") {
         currentQuestionText = "Who's joining the meeting from your side?";
@@ -864,7 +966,7 @@ function endChat() {
 }
 
 function getResources() {
-    var q2 = session.answers.q2 || "";
+    var q2 = session.answers.q2mapped || mapFreeTextToQ2(session.answers.q2 || "");
     var q4 = session.answers.q4 || [];
     var r = [];
     if (session.path === "engaged") {
