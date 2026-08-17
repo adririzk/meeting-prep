@@ -156,9 +156,26 @@ var conversationHistory = []; // Track full conversation for Bedrock context
 var currentQuestionText = ""; // The current question being shown
 var currentOptions = []; // The current available options
 
-// Get rep email from URL params (e.g. ?rep=victor@amazon.com)
+// Get context from URL params (Zoom redirect passes name + email automatically)
+// e.g. ?rep=victor@amazon.com&name=Anna&email=anna@acme.com
 var urlParams = new URLSearchParams(window.location.search);
 var repEmail = urlParams.get('rep') || '';
+var customerName = urlParams.get('name') || '';
+var customerEmail = urlParams.get('email') || '';
+// Company: use explicit param if given, otherwise derive from the email domain
+var customerCompany = urlParams.get('company') || deriveCompanyFromEmail(customerEmail);
+
+// Derive a company name from an email domain (e.g. anna@acme.com -> "Acme").
+// Returns "" for generic personal email providers.
+function deriveCompanyFromEmail(email) {
+    if (!email || email.indexOf('@') < 0) return '';
+    var domain = email.split('@')[1].toLowerCase();
+    var generic = ['gmail.com', 'outlook.com', 'hotmail.com', 'yahoo.com', 'icloud.com', 'live.com', 'proton.me', 'protonmail.com', 'aol.com'];
+    if (generic.indexOf(domain) >= 0) return '';
+    // Take the part before the first dot, capitalize it (acme.com -> Acme, my-corp.co.uk -> My-corp)
+    var base = domain.split('.')[0];
+    return base.charAt(0).toUpperCase() + base.slice(1);
+}
 
 // Track what bot said and what user answered for context
 function trackBotMessage(text) {
@@ -268,6 +285,10 @@ window.addEventListener("beforeunload", function() {
         }));
         var payload = JSON.stringify({
             conversationId: conversationId,
+            repEmail: repEmail,
+            customerName: customerName,
+            customerCompany: customerCompany,
+            customerEmail: customerEmail,
             answers: {
                 topic: session.answers.q2 || "",
                 desired_outcome: session.answers.q3 || "",
@@ -827,6 +848,9 @@ async function submitAnswers() {
         var payload = {
             conversationId: conversationId,
             repEmail: repEmail,
+            customerName: customerName,
+            customerCompany: customerCompany,
+            customerEmail: customerEmail,
             answers: {
                 topic: session.answers.q2 || "",
                 desired_outcome: session.answers.q3 || "",
