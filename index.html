@@ -658,15 +658,14 @@ async function askQ3() {
 async function askQ4() {
     session.step = "q4";
     if (session.path === "engaged") {
-        currentQuestionText = "What should we prioritise in the meeting?";
-        await addBot("What should we prioritise in the meeting?", 500);
+        currentQuestionText = "What would make this meeting a success for you?";
+        await addBot("And what would make this meeting a success for you?", 500);
         showOptions([
-            { label: "Architecture review", value: "architecture" },
-            { label: "Cost optimization", value: "cost" },
-            { label: "Security & compliance", value: "security" },
-            { label: "Performance & scaling", value: "performance" },
-            { label: "Migration planning", value: "migration" },
-            { label: "Roadmap & new services", value: "roadmap" },
+            { label: "Clear next steps / a plan", value: "next-steps" },
+            { label: "Understanding costs better", value: "costs" },
+            { label: "Confidence in the right approach", value: "confidence" },
+            { label: "Connecting with the right experts", value: "experts" },
+            { label: "Answers to specific questions", value: "answers" },
             { label: "Other", value: "other" }
         ], "Select up to 2, then click Continue", 2);
     } else {
